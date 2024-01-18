@@ -28,6 +28,7 @@ export const cookie = (cookies?: CookiesFn) => ({
             return schema._def.defaultValue();
         }
 
+        // @ts-expect-error
         return undefined;
     },
     set: <Key extends CookieKeyType>(key: Key, value: CookieValue[Key], options?: OptionsType) => {
