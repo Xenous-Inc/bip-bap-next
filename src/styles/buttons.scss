@@ -1,0 +1,17 @@
+@layer components {
+    .btn-filled {
+        @apply pt-2.5 pb-2.5 pl-5 pr-5 bg-btn-blue rounded-full text-white flex flex-row gap-2.5 outline-none;
+    }
+
+    .btn-outlined {
+        @apply pt-2.5 pb-2.5 pl-5 pr-5 border-2 border-btn-blue rounded-full flex flex-row gap-2.5 outline-none;
+    }
+
+    .btn-blank {
+        @apply pt-2.5 pb-2.5 pl-5 pr-5 flex flex-row gap-2.5 outline-none;
+    }
+
+    .btn-shadow {
+        @apply pt-2.5 pb-2.5 pl-5 pr-5 shadow-3xl rounded-full text-btn-grey flex flex-row gap-x-2.5 outline-none;
+    }
+}

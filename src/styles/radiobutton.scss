@@ -1,0 +1,9 @@
+@layer components {
+    .radiobutton {
+        @apply  relative appearance-none w-6 h-6 rounded-full border-2 border-lines-color focus:outline-none;
+        &:checked{
+            @apply border-[6px] border-checked-color;
+        }
+    }
+
+}
