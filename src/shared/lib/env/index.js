@@ -17,6 +17,7 @@ export const env = createEnv({
             str => process.env.VERCEL_URL ?? str,
             process.env.VERCEL ? z.string() : z.string().url().optional()
         ),
+        NEXT_PUBLIC_MAPBOX_TOKEN: z.string(),
     },
     runtimeEnv: {
         NEXT_PUBLIC_ENV: process.env.NODE_ENV,
@@ -27,6 +28,8 @@ export const env = createEnv({
 
         POSTGRES_PRISMA_URL: process.env.POSTGRES_PRISMA_URL,
         POSTGRES_URL_NON_POOLING: process.env.POSTGRES_URL_NON_POOLING,
+
+        NEXT_PUBLIC_MAPBOX_TOKEN: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,
     },
     skipValidation: !!process.env.SKIP_ENV_VALIDATION,
     emptyStringAsUndefined: true,

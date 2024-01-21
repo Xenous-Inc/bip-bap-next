@@ -1,9 +1,9 @@
- @layer components{
+@layer components {
+    .checkbox {
+        @apply relative h-6 w-6 appearance-none rounded-checkbox-raduis border-2 border-lines-color focus:outline-none;
 
-    .checkbox{
-        @apply relative appearance-none w-6 h-6 border-2 border-lines-color rounded-checkbox-raduis focus:outline-none  ;
-        &:checked { 
-            @apply border-0 bg-center bg-no-repeat bg-checkmarker-size bg-checkmarker-image bg-checked-color;
+        &:checked {
+            @apply border-0 bg-checked-color bg-checkmarker-image bg-[length:0.4rem_0.28rem] bg-center bg-no-repeat;
         }
     }
- }
+}
