@@ -47,6 +47,12 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+enum UserType {
+  ADMIN
+  USER
+  GUEST
+}
+
 model User {
   id            String    @id @default(cuid())
   name          String?
@@ -56,7 +62,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   posts         Post[]
-  type          String
+  type          UserType
   sensors       Sensor[]
 }
 
@@ -68,35 +74,31 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
-model Location {
-  type        String
-  coordinates Float[] @unique
-  Sensor      Sensor?
+enum SensorDataType {
+  PM10
+  PM25
+  OZON
 }
 
-// Модель для описания Param
-model Param {
-  id           Int     @id @default(autoincrement())
-  type         String
-  value        Int
-  fieldSensors String
-  isDeleted    Boolean
-  Sensor       Sensor? @relation(fields: [sensorId], references: [id])
-  sensorId     Int?
+model SensorData {
+  id        Int            @id @default(autoincrement())
+  type      SensorDataType
+  value     Int
+  isDeleted Boolean
+  Sensor    Sensor[]
 }
 
 model Sensor {
-  id                  Int      @id @default(autoincrement())
-  name                String   @unique
-  model               Int
-  version             Float
-  firmwareVersion     String
-  serialNumber        String
-  approvedBySensor    Boolean
-  owner               String
-  settings            String
-  locationCoordinates Float[]  @unique
-  location            Location @relation(fields: [locationCoordinates], references: [coordinates])
-  values              Param[]
-  users               User[]
+  id               Int         @id @default(autoincrement())
+  name             String      @unique
+  model            Int
+  version          Float
+  firmwareVersion  String
+  serialNumber     String
+  approvedBySensor Boolean
+  settings         String
+  coordinates      Float[]
+  values           SensorData? @relation(fields: [sensorDataId], references: [id])
+  sensorDataId     Int?
+  users            User[]
 }
