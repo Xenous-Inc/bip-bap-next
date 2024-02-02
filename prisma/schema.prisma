@@ -81,24 +81,24 @@ enum SensorDataType {
 }
 
 model SensorData {
-  id        Int            @id @default(autoincrement())
+  id        String            @id @default(cuid())
   type      SensorDataType
-  value     Int
+  value     Float
   isDeleted Boolean
-  Sensor    Sensor[]
-}
+  sensor  Sensor @relation(fields: [sensorId], references: [id])
+  sensorId  String 
+} 
 
 model Sensor {
-  id               Int         @id @default(autoincrement())
+  id               String         @id @default(cuid())
   name             String      @unique
   model            Int
   version          Float
   firmwareVersion  String
   serialNumber     String
-  approvedBySensor Boolean
-  settings         String
   coordinates      Float[]
-  values           SensorData? @relation(fields: [sensorDataId], references: [id])
-  sensorDataId     Int?
-  users            User[]
+  values           SensorData[]
+  ownerId          String  
+  owner            User @relation( fields: [ownerId], references: [id])
+
 }
