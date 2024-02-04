@@ -96,7 +96,8 @@ model Sensor {
   version          Float
   firmwareVersion  String
   serialNumber     String
-  coordinates      Float[]
+  latitude         Float  
+  longitude        Float
   values           SensorData[]
   ownerId          String  
   owner            User @relation( fields: [ownerId], references: [id])
