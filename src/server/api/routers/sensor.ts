@@ -7,29 +7,19 @@ export const sensorRouter = createTRPCRouter({
     createSensor: publicProcedure
         .input(
             z.object({
-                id: z.string().cuid(),
                 name: z.string(),
-                model: z.number(),
-                version: z.number(),
-                firmwareVersion: z.string(),
-                serialNumber: z.string(),
+                model: z.number().default(1),
+                version: z.number().default(1.1),
+                firmwareVersion: z.string().default('default-firmwareVersion'),
+                serialNumber: z.string().default('default-serialNumber'),
                 latitude: z.number(),
                 longitude: z.number(),
-                values: z.array(
-                    z.object({
-                        id: z.string().cuid(),
-                        type: z.enum(SensorDataType),
-                        value: z.number(),
-                        isDeleted: z.boolean(),
-                    })
-                ),
                 ownerId: z.string(),
             })
         )
         .mutation(async ({ ctx, input }) => {
             const newSensor = await ctx.db.sensor.create({
                 data: {
-                    id: input.id,
                     name: input.name,
                     model: input.model,
                     version: input.version,
@@ -38,12 +28,6 @@ export const sensorRouter = createTRPCRouter({
                     latitude: input.latitude,
                     longitude: input.longitude,
                     ownerId: input.ownerId,
-                    values: {
-                        create: input.values,
-                    },
-                },
-                include: {
-                    values: true,
                 },
             });
             return newSensor;
@@ -78,14 +62,6 @@ export const sensorRouter = createTRPCRouter({
                 serialNumber: z.string(),
                 latitude: z.number(),
                 longitude: z.number(),
-                values: z.array(
-                    z.object({
-                        id: z.string().cuid(),
-                        type: z.enum(SensorDataType),
-                        value: z.number(),
-                        isDeleted: z.boolean(),
-                    })
-                ),
                 ownerId: z.string(),
             })
         )
@@ -95,7 +71,6 @@ export const sensorRouter = createTRPCRouter({
                     id: input.id,
                 },
                 data: {
-                    id: input.id,
                     name: input.name,
                     model: input.model,
                     version: input.version,
@@ -104,21 +79,6 @@ export const sensorRouter = createTRPCRouter({
                     latitude: input.latitude,
                     longitude: input.longitude,
                     ownerId: input.ownerId,
-                    values: {
-                        update: input.values?.map(sensorData => ({
-                            where: {
-                                id: sensorData.id,
-                            },
-                            data: {
-                                type: sensorData.type,
-                                value: sensorData.value,
-                                isDeleted: sensorData.isDeleted,
-                            },
-                        })),
-                    },
-                },
-                include: {
-                    values: true,
                 },
             });
             return updatedSensor;
