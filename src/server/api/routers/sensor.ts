@@ -1,7 +1,5 @@
 import { z } from 'zod';
-import { createTRPCRouter, protectedProcedure, publicProcedure } from '../trpc';
-
-const SensorDataType = ['PM10', 'PM25', 'OZON'] as const;
+import { createTRPCRouter, publicProcedure } from '../trpc';
 
 export const sensorRouter = createTRPCRouter({
     createSensor: publicProcedure
@@ -14,7 +12,7 @@ export const sensorRouter = createTRPCRouter({
                 serialNumber: z.string().default('default-serialNumber'),
                 latitude: z.number(),
                 longitude: z.number(),
-                ownerId: z.string(),
+                //ownerId: z.string().cuid().default('cklns1fzi0000lflw9p2wx7az'),
             })
         )
         .mutation(async ({ ctx, input }) => {
@@ -27,7 +25,7 @@ export const sensorRouter = createTRPCRouter({
                     serialNumber: input.serialNumber,
                     latitude: input.latitude,
                     longitude: input.longitude,
-                    ownerId: input.ownerId,
+                    //ownerId: 'cklns1fzi0000lflw9p2wx7az',
                 },
             });
             return newSensor;
@@ -40,17 +38,21 @@ export const sensorRouter = createTRPCRouter({
         });
         return deletedSensor;
     }),
-    getByLocation: publicProcedure
-        .input(z.object({ latitude: z.number(), longitude: z.number() }))
-        .query(async ({ ctx, input }) => {
-            const sensors = await ctx.db.sensor.findMany({
-                where: {
-                    latitude: input.latitude,
-                    longitude: input.longitude,
+    getByLocation: publicProcedure.input(z.array(z.number()).length(4)).query(async ({ ctx, input }) => {
+        const sensors = await ctx.db.sensor.findMany({
+            where: {
+                latitude: {
+                    gte: input[1],
+                    lte: input[3],
                 },
-            });
-            return { sensors };
-        }),
+                longitude: {
+                    gte: input[0],
+                    lte: input[2],
+                },
+            },
+        });
+        return { sensors };
+    }),
     updateSensor: publicProcedure
         .input(
             z.object({
@@ -62,7 +64,7 @@ export const sensorRouter = createTRPCRouter({
                 serialNumber: z.string(),
                 latitude: z.number(),
                 longitude: z.number(),
-                ownerId: z.string(),
+                // ownerId: z.string(),
             })
         )
         .mutation(async ({ ctx, input }) => {
@@ -78,7 +80,7 @@ export const sensorRouter = createTRPCRouter({
                     serialNumber: input.serialNumber,
                     latitude: input.latitude,
                     longitude: input.longitude,
-                    ownerId: input.ownerId,
+                    //ownerId: input.ownerId,
                 },
             });
             return updatedSensor;
