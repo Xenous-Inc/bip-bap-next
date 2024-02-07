@@ -63,7 +63,7 @@ model User {
   sessions      Session[]
   posts         Post[]
   type          UserType
-  sensors       Sensor[]
+ // sensors       Sensor[]
 }
 
 model VerificationToken {
@@ -96,9 +96,10 @@ model Sensor {
   version          Float
   firmwareVersion  String
   serialNumber     String
-  coordinates      Float[]
+  latitude         Float  
+  longitude        Float
   values           SensorData[]
-  ownerId          String  
-  owner            User @relation( fields: [ownerId], references: [id])
+  //ownerId          String  
+  //owner            User @relation( fields: [ownerId], references: [id])
 
 }
