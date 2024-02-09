@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ParametrsValue } from '~/entities/SensorParametr/model/constants';
 import { createTRPCRouter, publicProcedure } from '../trpc';
 
 const SensorDataType = ['PM10', 'PM25', 'OZON'] as const;
