@@ -9,7 +9,6 @@ import MapButton from '~/shared/assets/icons/map-button.svg';
 import PointIcon from '~/shared/assets/icons/map-pin.svg';
 import MenuIcon from '~/shared/assets/icons/menu-icon.svg';
 import SettingsIcon from '~/shared/assets/icons/settings.svg';
-import { env } from '~/shared/lib';
 import { api } from '~/trpc/react';
 
 interface SensorInfoProps {
@@ -22,14 +21,13 @@ interface SensorInfoProps {
         serialNumber: string;
         latitude: number;
         longitude: number;
+        location: string;
     };
-    location: string;
 }
 
 export const SensorInfo: React.FC<SensorInfoProps> = props => {
     const {
-        sensor: { id, name, model },
-        location,
+        sensor: { id, name, model, location },
     } = props;
     const sensorDataResponse = api.sensorData.getBySensorId.useQuery(id);
     if (sensorDataResponse.isSuccess)
@@ -37,7 +35,7 @@ export const SensorInfo: React.FC<SensorInfoProps> = props => {
             <Disclosure>
                 <Disclosure.Button
                     className={cn(
-                        'relative mt-5 flex w-3/4 flex-row items-center  justify-between rounded-md  bg-white ui-open:rounded-b-none'
+                        'relative mt-5 flex w-full flex-row items-center  justify-between rounded-md  bg-white ui-open:rounded-b-none'
                     )}
                 >
                     <div className={cn('flex flex-col justify-center gap-y-2 py-3 pl-4')}>
@@ -70,7 +68,7 @@ export const SensorInfo: React.FC<SensorInfoProps> = props => {
                         </div>
                     </div>
                 </Disclosure.Button>
-                <Disclosure.Panel className={cn('w-3/4  rounded-md rounded-t-none bg-white')}>
+                <Disclosure.Panel className={cn('w-full  rounded-md rounded-t-none bg-white')}>
                     <div className={cn('mx-7 mt-3 h-[1px]  bg-lines-color')}></div>
                     {sensorDataResponse.data.map(sensorData => {
                         return (

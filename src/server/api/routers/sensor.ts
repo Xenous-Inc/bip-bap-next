@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { z } from 'zod';
 import { env } from '~/shared/lib';
+import { api } from '~/trpc/react';
 import { createTRPCRouter, publicProcedure } from '../trpc';
 
 export const sensorRouter = createTRPCRouter({
@@ -52,14 +54,29 @@ export const sensorRouter = createTRPCRouter({
                 },
             },
         });
-        const locations = sensors.map(async sensor => {
-            const response = await fetch(
-                `https://api.mapbox.com/geocoding/v5/mapbox.places/${sensor.longitude},${sensor.latitude}.json?types=address&access_token-${env.NEXT_PUBLIC_MAPBOX_TOKEN}`
-            );
-            return response.ok ? response.json() : 'Undefined location';
-        });
+        const sensorsWithLocations = await Promise.all(
+            sensors.map(async sensor => {
+                try {
+                    const response = await ctx.http.get(
+                        `https://api.mapbox.com/geocoding/v5/mapbox.places/${sensor.longitude},${sensor.latitude}.json?types=address&language=ru&access_token=${env.NEXT_PUBLIC_MAPBOX_TOKEN}`
+                    );
 
-        return { sensors, locations };
+                    if (response.status !== 200) {
+                        return { ...sensor, location: 'Undefined location' };
+                    }
+
+                    const data = response.data;
+                    const location = data.features[0].place_name_ru;
+
+                    return { ...sensor, location };
+                } catch (error) {
+                    console.error('Error fetching location for sensor:', error);
+                    return { ...sensor, location: 'Error fetching location' };
+                }
+            })
+        );
+
+        return sensorsWithLocations;
     }),
     updateSensor: publicProcedure
         .input(
@@ -94,24 +111,28 @@ export const sensorRouter = createTRPCRouter({
             return updatedSensor;
         }),
     getAll: publicProcedure.query(async ({ ctx }) => {
-        const allSensors = await ctx.db.sensor.findMany();
-        const locationsPromises = allSensors.map(async sensor => {
-            const response = await fetch(
-                `https://api.mapbox.com/geocoding/v5/mapbox.places/${sensor.longitude},${sensor.latitude}.json?types=address&language=ru&access_token=${env.NEXT_PUBLIC_MAPBOX_TOKEN}`
-            );
-            if (!response.ok) {
-                return 'Udefined location';
-            }
-            const data = await response.json();
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-            const location: string = data.features[0].place_name_ru;
-            return location;
-        });
-        const locations = await Promise.all(locationsPromises);
-        const sensorsWithLocations = allSensors.map((sensor, index) => ({
-            ...sensor,
-            location: locations[index],
-        }));
+        const sensors = await ctx.db.sensor.findMany();
+        const sensorsWithLocations = await Promise.all(
+            sensors.map(async sensor => {
+                try {
+                    const response = await ctx.http.get(
+                        `https://api.mapbox.com/geocoding/v5/mapbox.places/${sensor.longitude},${sensor.latitude}.json?types=address&language=ru&access_token=${env.NEXT_PUBLIC_MAPBOX_TOKEN}`
+                    );
+
+                    if (response.status !== 200) {
+                        return { ...sensor, location: 'Undefined location' };
+                    }
+
+                    const data = response.data;
+                    const location = data.features[0].place_name_ru;
+
+                    return { ...sensor, location };
+                } catch (error) {
+                    console.error('Error fetching location for sensor:', error);
+                    return { ...sensor, location: 'Error fetching location' };
+                }
+            })
+        );
 
         return sensorsWithLocations;
     }),
@@ -134,23 +155,27 @@ export const sensorRouter = createTRPCRouter({
                 },
             });
             let nextCursor: typeof cursor | undefined = undefined;
-            const locationsPromises = sensors.map(async sensor => {
-                const response = await fetch(
-                    `https://api.mapbox.com/geocoding/v5/mapbox.places/${sensor.longitude},${sensor.latitude}.json?types=address&language=ru&access_token=${env.NEXT_PUBLIC_MAPBOX_TOKEN}`
-                );
-                if (!response.ok) {
-                    return 'Udefined location';
-                }
-                const data = await response.json();
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-                const location: string = data.features[0].place_name_ru;
-                return location;
-            });
-            const locations = await Promise.all(locationsPromises);
-            const sensorsWithLocations = sensors.map((sensor, index) => ({
-                ...sensor,
-                location: locations[index],
-            }));
+            const sensorsWithLocations = await Promise.all(
+                sensors.map(async sensor => {
+                    try {
+                        const response = await opts.ctx.http.get(
+                            `https://api.mapbox.com/geocoding/v5/mapbox.places/${sensor.longitude},${sensor.latitude}.json?types=address&language=ru&access_token=${env.NEXT_PUBLIC_MAPBOX_TOKEN}`
+                        );
+
+                        if (response.status !== 200) {
+                            return { ...sensor, location: 'Undefined location' };
+                        }
+
+                        const data = await response.data;
+                        const location: string = await data.features[0].place_name_ru;
+
+                        return { ...sensor, location };
+                    } catch (error) {
+                        console.error('Error fetching location for sensor:', error);
+                        return { ...sensor, location: 'Error fetching location' };
+                    }
+                })
+            );
             if (sensorsWithLocations.length > limit) {
                 const nextSensor = sensorsWithLocations.pop();
                 nextCursor = nextSensor!.id;
