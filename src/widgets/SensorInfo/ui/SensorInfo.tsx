@@ -35,7 +35,7 @@ export const SensorInfo: React.FC<SensorInfoProps> = props => {
             <Disclosure>
                 <Disclosure.Button
                     className={cn(
-                        'relative mt-5 flex w-full flex-row items-center  justify-between rounded-md  bg-white ui-open:rounded-b-none'
+                        'relative mt-5 flex  flex-row items-center  justify-between rounded-md  bg-white ui-open:rounded-b-none'
                     )}
                 >
                     <div className={cn('flex flex-col justify-center gap-y-2 py-3 pl-4')}>
@@ -68,7 +68,7 @@ export const SensorInfo: React.FC<SensorInfoProps> = props => {
                         </div>
                     </div>
                 </Disclosure.Button>
-                <Disclosure.Panel className={cn('w-full  rounded-md rounded-t-none bg-white')}>
+                <Disclosure.Panel className={cn('rounded-md rounded-t-none bg-white')}>
                     <div className={cn('mx-7 mt-3 h-[1px]  bg-lines-color')}></div>
                     {sensorDataResponse.data.map(sensorData => {
                         return (

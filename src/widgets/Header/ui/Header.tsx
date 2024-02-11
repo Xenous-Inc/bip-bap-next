@@ -11,7 +11,7 @@ import { NavLink } from './NavLink';
 
 export const Header: React.FC = () => {
     return (
-        <header className={'fixed z-50 flex w-full flex-row items-center justify-between bg-white px-32 text-black'}>
+        <header className={'fixed z-50 flex w-full flex-row items-center justify-between bg-white px-32  text-black'}>
             <Link href={'/'} className={'border-t-4 border-y-white text-2xl font-bold text-header-blue'}>
                 Bip-Bap
             </Link>

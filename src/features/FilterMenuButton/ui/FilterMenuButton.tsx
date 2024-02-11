@@ -81,8 +81,8 @@ export const FilterMenuButton: React.FC<FilterMenuButtonProps> = ({ isOpen, setI
     return (
         <button
             className={cn(
-                'btn-shadow absolute z-10 h-12 w-fit items-center !gap-x-1 bg-white',
-                styledPosition ? styledPosition : ' left-10 top-10'
+                'btn-shadow absolute top-24 z-10 h-12 w-fit items-center !gap-x-1 bg-white',
+                styledPosition ? styledPosition : ' left-10'
             )}
             onClick={() => {
                 setIsOpen(!isOpen);
