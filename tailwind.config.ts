@@ -36,6 +36,7 @@ export default {
             backgroundImage: {
                 // eslint-disable-next-line quotes
                 'checkmarker-image': "url('../shared/assets/icons/checkmarker.svg')",
+                'marker-image': 'url(../shared/assets/icons/marker.svg)',
             },
         },
     },
