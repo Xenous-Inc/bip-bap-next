@@ -37,7 +37,9 @@ export const FilterMenu: React.FC<FilterMenuProps> = props => {
                         <Sliders width='14' height='14' />
                         Фильтры
                     </div>
-                    <IconClose className={cn('h-6 w-6')} />
+                    <button onClick={() => setIsOpen(false)}>
+                        <IconClose className={cn('h-6 w-6')} />
+                    </button>
                 </div>
                 <Disclosure>
                     <Disclosure.Button className={cn('relative mt-5 flex flex-row items-center justify-between')}>

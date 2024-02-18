@@ -15,6 +15,8 @@ export default {
                 'error-color': '#F44336',
                 'facebook-bg-color': '#1877F2',
                 'header-blue': '#3D5AFE',
+                'btn-green': '#2ECC71',
+                'page-bg': '#F5F5F7',
             },
             boxShadow: {
                 '3xl': '0px 0px 25px 0px #00000033',
