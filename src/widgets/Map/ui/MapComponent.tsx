@@ -64,7 +64,10 @@ export const MapComponent = () => {
             <Map
                 {...viewState}
                 mapboxAccessToken={env.NEXT_PUBLIC_MAPBOX_TOKEN}
-                onZoom={handleMapZoom}
+                onZoom={evt => {
+                    setViewState(evt.viewState);
+                    handleMapZoom();
+                }}
                 onMove={evt => {
                     setViewState(evt.viewState);
                     handleMapMove();
