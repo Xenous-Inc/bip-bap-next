@@ -1,4 +1,5 @@
-import { initTRPC, TRPCError } from '@trpc/server';
+import { type inferReactQueryProcedureOptions } from '@trpc/react-query';
+import { type inferRouterInputs, type inferRouterOutputs, initTRPC, TRPCError } from '@trpc/server';
 import superjson from 'superjson';
 import { ZodError } from 'zod';
 import { httpClient } from '~/shared/api';

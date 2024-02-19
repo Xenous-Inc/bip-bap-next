@@ -11,10 +11,14 @@ import IconUser from '~/shared/assets/icons/icon_user.svg';
 import { NavLink } from './NavLink';
 
 export const Header: React.FC = () => {
-    const session = useSession();
+    // const session = useSession();
 
     return (
-        <header className={'fixed z-50 flex w-full flex-row items-center justify-between bg-white px-32  text-black'}>
+        <header
+            className={
+                'fixed z-50 flex w-full flex-row items-center justify-between bg-white px-32  text-black shadow-md'
+            }
+        >
             <Link href={'/'} className={'border-t-4 border-y-white text-2xl font-bold text-header-blue'}>
                 Bip-Bap
             </Link>
@@ -37,19 +41,19 @@ export const Header: React.FC = () => {
                     <IconBookmark className={'h-6 w-6'} /> Избранные датчики
                 </NavLink>
             </nav>
-            {session.status === 'authenticated' && (
-                <Link href={'/profile'}>
-                    <IconUser className={'h-6 w-6'} />
-                </Link>
-            )}
-            {session.status === 'unauthenticated' && (
+            {/* {session.status === 'authenticated' && ( */}
+            <Link href={'/profile'}>
+                <IconUser className={'h-6 w-6'} />
+            </Link>
+            {/* )} */}
+            {/* {session.status === 'unauthenticated' && (
                 <>
                     <button onClick={console.log}>
                         <IconUser className={'h-6 w-6'} />
-                    </button>
-                    {/* todo: add popups here */}
-                </>
-            )}
+                    </button> */}
+            {/* todo: add popups here */}
+            {/* </>
+            )} */}
         </header>
     );
 };

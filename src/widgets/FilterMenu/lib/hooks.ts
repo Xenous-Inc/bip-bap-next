@@ -22,14 +22,20 @@ const stringify = (params: Record<ParametrsType, boolean>) => {
         .filter(param => params[param as ParametrsType])
         .join('+');
 };
+const InitialParams: Record<ParametrsType, boolean> = {
+    pm10: true,
+    pm25: true,
+    ozon: true,
+};
+
 export const useSideSheetState = () => {
-    const searchState = useSearchState();
+    const searchState = useSearchState({ params: stringify(InitialParams), display: DisplayValue.AllSensors });
     const params = searchState.get().params;
     const parseParams = parse(params ?? '');
-    const [selectedParams, setSelectedParams] = useState<Record<ParametrsType, boolean>>(parseParams);
+    const [selectedParams, setSelectedParams] = useState<Record<ParametrsType, boolean>>(InitialParams);
     const display = searchState.get().display;
     const [selectedDisplay, setSelectedDisplay] = useState(display ?? DisplayValue.AllSensors);
-    const [isAllChecked, setIsAllChecked] = useState(false);
+    const [isAllChecked, setIsAllChecked] = useState(true);
 
     useEffect(() => {
         setIsAllChecked(!Object.values(selectedParams).includes(false));

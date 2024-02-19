@@ -17,7 +17,7 @@ export const SideSheet: React.FC<SideSheetProps> = props => {
                 onClose={() => {
                     setIsOpen(false);
                 }}
-                className={'fixed inset-0 z-10 flex drop-shadow-xl'}
+                className={'fixed inset-0 z-40 flex pt-14 drop-shadow-xl'}
             >
                 <Transition.Child
                     enter='transition transform ease-in-out duration-200 sm:duration-500'
