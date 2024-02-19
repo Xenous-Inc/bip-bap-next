@@ -1,0 +1,5 @@
+@layer components {
+    .marker {
+        @apply h-7 w-7 cursor-pointer bg-marker-image
+    }
+}
