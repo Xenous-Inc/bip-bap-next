@@ -1,11 +1,10 @@
-'use client';
 import { useCallback, useEffect, useState } from 'react';
 import { ParametrsValue, type ParametrsType, DisplayValue } from '~/entities/FilterMenu';
 import { useSearchState } from '~/shared/lib';
+import { useSessionStorageState } from '~/shared/lib/hooks/sessionStorage/useSessionStorage';
 
 // parse query string to  Parametrs object
 const parse = (query: string) => {
-    console.log(query);
     const values = query.split('+');
     return Object.values(ParametrsValue).reduce(
         (acc, parametr) => {
@@ -23,11 +22,11 @@ const stringify = (params: Record<ParametrsType, boolean>) => {
         .join('+');
 };
 export const useSideSheetState = () => {
-    const searchState = useSearchState();
-    const params = searchState.get().params;
-    const parseParams = parse(params ?? '');
+    const sessionState = useSessionStorageState();
+    const params = sessionState.get().params;
+    const parseParams = parse(params ?? 'pm25+pm10+ozon');
     const [selectedParams, setSelectedParams] = useState<Record<ParametrsType, boolean>>(parseParams);
-    const display = searchState.get().display;
+    const display = sessionState.get().display;
     const [selectedDisplay, setSelectedDisplay] = useState(display ?? DisplayValue.AllSensors);
     const [isAllChecked, setIsAllChecked] = useState(false);
 
@@ -60,7 +59,11 @@ export const useSideSheetState = () => {
     };
     const setState = useCallback(() => {
         const stringifyParams = stringify(selectedParams);
-        searchState.set({ params: stringifyParams, display: selectedDisplay });
+        sessionState.set({ params: stringifyParams });
+        sessionState.set({ display: selectedDisplay });
+        console.log('APPLY');
+        console.log('PARAMS');
+        console.log(sessionStorage);
     }, [selectedParams, selectedDisplay]);
     return {
         params,

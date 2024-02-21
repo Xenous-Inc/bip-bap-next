@@ -18,7 +18,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return (
         <html>
             <body className={`font-sans ${inter.variable}`}>
-                <Header />
                 <Providers>{children}</Providers>
             </body>
         </html>
