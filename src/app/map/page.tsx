@@ -1,7 +1,6 @@
 'use client';
 import { useState } from 'react';
 import { LayerPicker } from '~/entities/LayerPicker';
-import { Loader } from '~/entities/Loader';
 import { SideScale } from '~/entities/SideScale';
 import { FilterMenuButton } from '~/features/FilterMenuButton/ui/FilterMenuButton';
 import { FilterMenu } from '~/widgets/FilterMenu';
