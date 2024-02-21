@@ -1,5 +1,6 @@
 'use client';
 //TODO: create localisation for placeholder
+import cn from 'classnames';
 import { useEffect, useState } from 'react';
 import { DisplayValue } from '~/entities/FilterMenu';
 import Line from '~/shared/assets/icons/filter-line.svg';
@@ -9,6 +10,7 @@ import { useSearchState } from '~/shared/lib';
 export interface FilterMenuButtonProps {
     isOpen: boolean;
     setIsOpen: (value: boolean) => void;
+    styledPosition?: string;
 }
 
 export interface DisplayPlaceholderProps {
@@ -65,7 +67,7 @@ const DisplayPlaceholder: React.FC<DisplayPlaceholderProps> = props => {
     }
 };
 
-export const FilterMenuButton: React.FC<FilterMenuButtonProps> = ({ isOpen, setIsOpen }) => {
+export const FilterMenuButton: React.FC<FilterMenuButtonProps> = ({ isOpen, setIsOpen, styledPosition }) => {
     const searchState = useSearchState();
     const params = searchState.get().params;
     const display = searchState.get().display;
@@ -78,7 +80,10 @@ export const FilterMenuButton: React.FC<FilterMenuButtonProps> = ({ isOpen, setI
 
     return (
         <button
-            className={'btn-shadow absolute left-10 top-10 z-10 h-12 w-fit items-center !gap-x-1 bg-white'}
+            className={cn(
+                'btn-shadow absolute top-24 z-10 h-12 w-fit items-center !gap-x-1 bg-white',
+                styledPosition ? styledPosition : ' left-10'
+            )}
             onClick={() => {
                 setIsOpen(!isOpen);
             }}
