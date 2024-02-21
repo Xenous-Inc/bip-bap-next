@@ -1,12 +1,17 @@
 'use client';
 //TODO: create localisation for placeholder
 import cn from 'classnames';
+import { useAtomValue } from 'jotai';
 import { useEffect, useState } from 'react';
-import { DisplayValue } from '~/entities/FilterMenu';
+import { DisplayValue, filterStateAtom, type ParametrsType } from '~/entities/FilterMenu';
 import Line from '~/shared/assets/icons/filter-line.svg';
 import Sliders from '~/shared/assets/icons/sliders.svg';
-import { useSearchState } from '~/shared/lib';
 
+const stringify = (params: Record<ParametrsType, boolean>) => {
+    return Object.keys(params)
+        .filter(param => params[param as ParametrsType])
+        .join('+');
+};
 export interface FilterMenuButtonProps {
     isOpen: boolean;
     setIsOpen: (value: boolean) => void;
@@ -68,9 +73,9 @@ const DisplayPlaceholder: React.FC<DisplayPlaceholderProps> = props => {
 };
 
 export const FilterMenuButton: React.FC<FilterMenuButtonProps> = ({ isOpen, setIsOpen, styledPosition }) => {
-    const searchState = useSearchState();
-    const params = searchState.get().params;
-    const display = searchState.get().display;
+    const filterState = useAtomValue(filterStateAtom);
+    const params = stringify(filterState.params);
+    const display = filterState.display;
 
     const [placeholder, setPlaceholder] = useState(createPlaceholder(params, display));
 

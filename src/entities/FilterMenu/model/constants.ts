@@ -13,3 +13,11 @@ export const ParametrsValue = {
 } as const;
 
 export type ParametrsType = (typeof ParametrsValue)[keyof typeof ParametrsValue];
+
+export const initialParams: Record<ParametrsType, boolean> = {
+    [ParametrsValue.PM25]: true,
+    [ParametrsValue.PM10]: true,
+    [ParametrsValue.Ozon]: true,
+};
+
+export const initialDisplay: DisplayType = DisplayValue.AllSensors;

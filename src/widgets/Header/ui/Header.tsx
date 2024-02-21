@@ -11,7 +11,7 @@ import IconUser from '~/shared/assets/icons/icon_user.svg';
 import { NavLink } from './NavLink';
 
 export const Header: React.FC = () => {
-    const session = useSession();
+    // const session = useSession();
 
     return (
         <header className={'fixed z-50 flex w-full flex-row items-center justify-between bg-white px-32  text-black'}>
@@ -37,7 +37,7 @@ export const Header: React.FC = () => {
                     <IconBookmark className={'h-6 w-6'} /> Избранные датчики
                 </NavLink>
             </nav>
-            {session.status === 'authenticated' && (
+            {/* {session.status === 'authenticated' && (
                 <Link href={'/profile'}>
                     <IconUser className={'h-6 w-6'} />
                 </Link>
@@ -47,9 +47,9 @@ export const Header: React.FC = () => {
                     <button onClick={console.log}>
                         <IconUser className={'h-6 w-6'} />
                     </button>
-                    {/* todo: add popups here */}
+                    {todo: add popups here }
                 </>
-            )}
+            )} */}
         </header>
     );
 };

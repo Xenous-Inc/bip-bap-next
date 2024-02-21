@@ -1,18 +1,21 @@
 'use client';
 
 import cn from 'classnames';
-import React, { useState } from 'react';
+import { useAtom } from 'jotai';
+import React, { useEffect, useState } from 'react';
 import IconClose from '~/shared/assets/icons/icon_close.svg';
 import LayerIcon from '~/shared/assets/icons/layers.svg';
 import SensorsIcon from '~/shared/assets/icons/map-pin.svg';
 import GradientIcon from '~/shared/assets/icons/trending-up.svg';
-import { useSearchState } from '~/shared/lib';
-import { GradientLayer, Layer, SensorsLayer } from '../lib/constants';
+import { GradientLayer, Layer, SensorsLayer } from '../model/constants';
+import { LayerStateAtom } from '../model/state';
 
 export const LayerPicker: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
-    const searchState = useSearchState();
-    const layer = searchState.get().layer;
+    const [layerState, setLayerState] = useAtom(LayerStateAtom);
+    useEffect(() => {
+        console.log(layerState);
+    }, [layerState]);
     return (
         <div className='relative h-12 w-12'>
             <div
@@ -23,19 +26,19 @@ export const LayerPicker: React.FC = () => {
             >
                 <button
                     onClick={() => {
-                        searchState.set(GradientLayer);
+                        setLayerState(GradientLayer);
                     }}
                 >
                     <span
                         className={cn(
                             'flex flex-row items-center justify-center gap-x-1 rounded-full px-2 outline-none',
-                            layer === Layer.Gradient ? 'bg-btn-blue text-white' : 'bg-white text-black'
+                            layerState.layer === Layer.Gradient ? 'bg-btn-blue text-white' : 'bg-white text-black'
                         )}
                     >
                         <GradientIcon
                             className={cn(
                                 ' m-2 h-6 w-6 stroke-current',
-                                layer === Layer.Gradient ? 'text-white' : 'text-btn-grey'
+                                layerState.layer === Layer.Gradient ? 'text-white' : 'text-btn-grey'
                             )}
                         />
                         Градиент
@@ -43,19 +46,19 @@ export const LayerPicker: React.FC = () => {
                 </button>
                 <button
                     onClick={() => {
-                        searchState.set(SensorsLayer);
+                        setLayerState(SensorsLayer);
                     }}
                 >
                     <span
                         className={cn(
                             'flex flex-row items-center justify-center gap-x-1 rounded-full px-2 outline-none',
-                            layer === Layer.Sensors ? 'bg-btn-blue text-white' : 'bg-white text-black'
+                            layerState.layer === Layer.Sensors ? 'bg-btn-blue text-white' : 'bg-white text-black'
                         )}
                     >
                         <SensorsIcon
                             className={cn(
                                 'm-2 h-6 w-6 stroke-current',
-                                layer === Layer.Sensors ? 'text-white' : 'text-btn-grey'
+                                layerState.layer === Layer.Sensors ? 'text-white' : 'text-btn-grey'
                             )}
                         />
                         Датчики
