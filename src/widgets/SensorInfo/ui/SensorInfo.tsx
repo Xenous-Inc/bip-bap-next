@@ -10,19 +10,12 @@ import PointIcon from '~/shared/assets/icons/map-pin.svg';
 import MenuIcon from '~/shared/assets/icons/menu-icon.svg';
 import SettingsIcon from '~/shared/assets/icons/settings.svg';
 import { api } from '~/trpc/react';
+import { type RouterOutputs } from '~/trpc/shared';
+
+type SensorInfoType = RouterOutputs['sensor']['getByLocation'][number];
 
 interface SensorInfoProps {
-    sensor: {
-        id: string;
-        name: string;
-        model: string;
-        version: number;
-        firmwareVersion: string;
-        serialNumber: string;
-        latitude: number;
-        longitude: number;
-        location: string;
-    };
+    sensor: SensorInfoType;
 }
 
 export const SensorInfo: React.FC<SensorInfoProps> = props => {

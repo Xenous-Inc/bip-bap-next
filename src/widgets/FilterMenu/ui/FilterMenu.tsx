@@ -31,7 +31,7 @@ export const FilterMenu: React.FC<FilterMenuProps> = props => {
 
     return (
         <SideSheet isOpen={isOpen} setIsOpen={setIsOpen}>
-            <div className={cn('flex flex-col  gap-y-5')}>
+            <div className={cn('flex flex-col gap-y-5')}>
                 <div className={cn('flex flex-row items-center justify-between')}>
                     <div className={cn('flex flex-row items-center justify-center gap-x-2')}>
                         <Sliders width='14' height='14' />
