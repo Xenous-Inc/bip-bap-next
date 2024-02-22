@@ -2,7 +2,7 @@
 
 import cn from 'classnames';
 import { useAtom } from 'jotai';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import IconClose from '~/shared/assets/icons/icon_close.svg';
 import LayerIcon from '~/shared/assets/icons/layers.svg';
 import SensorsIcon from '~/shared/assets/icons/map-pin.svg';
@@ -13,9 +13,6 @@ import { LayerStateAtom } from '../model/state';
 export const LayerPicker: React.FC = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [layerState, setLayerState] = useAtom(LayerStateAtom);
-    useEffect(() => {
-        console.log(layerState);
-    }, [layerState]);
     return (
         <div className='relative h-12 w-12'>
             <div
