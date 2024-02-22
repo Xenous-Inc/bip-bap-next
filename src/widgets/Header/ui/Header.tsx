@@ -1,13 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useSession } from 'next-auth/react';
 import IconBell from '~/shared/assets/icons/icon_bell.svg';
 import IconBookmark from '~/shared/assets/icons/icon_bookmark.svg';
 import IconList from '~/shared/assets/icons/icon_list.svg';
 import IconMap from '~/shared/assets/icons/icon_map.svg';
 import IconRating from '~/shared/assets/icons/icon_rating.svg';
-import IconUser from '~/shared/assets/icons/icon_user.svg';
 import { NavLink } from './NavLink';
 
 export const Header: React.FC = () => {

@@ -1,6 +1,6 @@
 import { useAtom } from 'jotai';
 import { useCallback, useEffect, useState } from 'react';
-import { type ParametrsType, type DisplayType, ParametrsValue, DisplayValue } from '~/entities/FilterMenu';
+import { type ParametrsType, type DisplayType } from '~/entities/FilterMenu';
 import { initialDisplay, initialParams } from './constants';
 import { filterStateAtom } from './state';
 
