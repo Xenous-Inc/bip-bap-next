@@ -82,7 +82,7 @@ export default () => {
                                 key={virtualRow.index}
                                 data-index={virtualRow.index}
                                 ref={virtualizer.measureElement}
-                                className={'flex w-full flex-col gap-y-2'}
+                                className={'flex w-full flex-col'}
                             >
                                 {rowSensors.map(sensor => (
                                     <SensorInfo sensor={sensor} />

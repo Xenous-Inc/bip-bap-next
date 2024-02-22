@@ -14,7 +14,7 @@ export const LayerPicker: React.FC = () => {
     const searchState = useSearchState();
     const layer = searchState.get().layer;
     return (
-        <div className='relative h-12 w-12'>
+        <div className='absolute bottom-10 right-7  z-50 h-12 w-12'>
             <div
                 className={cn(
                     'absolute bottom-0 right-1/2 top-0 flex h-auto flex-row items-center justify-start gap-x-4 overflow-hidden rounded-l-full bg-white pl-3 transition-all',
