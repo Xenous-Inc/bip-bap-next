@@ -1,4 +1,5 @@
 'use client';
+
 //TODO: create localisation for placeholder
 import cn from 'classnames';
 import { useAtomValue } from 'jotai';
@@ -72,21 +73,30 @@ const DisplayPlaceholder: React.FC<DisplayPlaceholderProps> = props => {
     }
 };
 
-export const FilterMenuButton: React.FC<FilterMenuButtonProps> = ({ isOpen, setIsOpen, styledPosition }) => {
+export const FilterMenuButton: React.FC<FilterMenuButtonProps> = props => {
+    const { isOpen, setIsOpen, styledPosition } = props;
+
     const filterState = useAtomValue(filterStateAtom);
     const params = stringify(filterState.params);
     const display = filterState.display;
 
     const [placeholder, setPlaceholder] = useState(createPlaceholder(params, display));
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     useEffect(() => {
         setPlaceholder(createPlaceholder(params, display));
     }, [params, display]);
 
+    if (!isClient) return null;
+
     return (
         <button
             className={cn(
-                'btn-shadow absolute top-24 z-30 h-12 w-fit items-center !gap-x-1 bg-white',
+                'btn-shadow absolute top-24 z-30 h-12 w-fit animate-fade-in items-center !gap-x-1 bg-white',
                 styledPosition ? styledPosition : ' left-7'
             )}
             onClick={() => {
