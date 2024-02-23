@@ -1,2 +1,2 @@
 export { LayerPicker } from './ui/LayerPicker';
-export { Layer } from './lib/constants';
+export { Layer } from './model/constants';

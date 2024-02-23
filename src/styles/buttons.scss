@@ -8,7 +8,7 @@
     }
 
     .btn-blank {
-        @apply flex flex-row gap-2.5 pb-2.5 pl-5 pr-5 pt-2.5 outline-none;
+        @apply flex flex-row gap-2.5 pb-2.5 pl-5 pr-5 pt-2.5 outline-none rounded-full ;
     }
 
     .btn-shadow {

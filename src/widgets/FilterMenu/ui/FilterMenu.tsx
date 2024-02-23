@@ -2,14 +2,13 @@
 
 import { Disclosure } from '@headlessui/react';
 import cn from 'classnames';
-import { DisplayValue, ParametrsValue } from '~/entities/FilterMenu';
+import { DisplayValue, ParametrsValue, useSideSheetState } from '~/entities/FilterMenu';
 import { SideSheet } from '~/entities/SideSheet';
 import FilterIcon from '~/shared/assets/icons/filter.svg';
 import IconClose from '~/shared/assets/icons/icon_close.svg';
 import MenuIcon from '~/shared/assets/icons/menu-icon.svg';
 import Sliders from '~/shared/assets/icons/sliders.svg';
 import TrashIcon from '~/shared/assets/icons/trash-2.svg';
-import { useSideSheetState } from '../lib/hooks';
 
 interface FilterMenuProps {
     isOpen: boolean;
@@ -27,6 +26,7 @@ export const FilterMenu: React.FC<FilterMenuProps> = props => {
         selectedParams,
         isAllChecked,
         setIsAllChecked,
+        clearState,
     } = useSideSheetState();
 
     return (
@@ -146,16 +146,26 @@ export const FilterMenu: React.FC<FilterMenuProps> = props => {
                     </Disclosure.Panel>
                 </Disclosure>
             </div>
-            <div className={'flex grow flex-col items-center justify-end'}>
+            <div className={'flex grow flex-col items-center justify-end gap-y-2'}>
                 <button
-                    className={cn('btn-outlined flex w-full items-center justify-center')}
+                    className={cn(
+                        'btn-outlined active:btn-filled flex w-full items-center justify-center duration-100'
+                    )}
                     onClick={() => {
                         setState();
+                        setIsOpen(false);
                     }}
                 >
                     <FilterIcon className={cn('h-6 w-6')} /> Показать
                 </button>
-                <button className={cn('btn-blank flex w-full items-center justify-center gap-x-2')}>
+                <button
+                    className={cn(
+                        'btn-blank active:btn-outlined flex w-full items-center justify-center !gap-x-2 border-2 border-transparent active:!border-lines-color '
+                    )}
+                    onClick={() => {
+                        clearState();
+                    }}
+                >
                     <TrashIcon className={cn('h-4 w-4')} /> Сброс
                 </button>
             </div>

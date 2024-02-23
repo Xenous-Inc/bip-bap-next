@@ -1,17 +1,15 @@
 'use client';
 
 import Link from 'next/link';
-//import { useSession } from 'next-auth/react';
 import IconBell from '~/shared/assets/icons/icon_bell.svg';
 import IconBookmark from '~/shared/assets/icons/icon_bookmark.svg';
 import IconList from '~/shared/assets/icons/icon_list.svg';
 import IconMap from '~/shared/assets/icons/icon_map.svg';
 import IconRating from '~/shared/assets/icons/icon_rating.svg';
-import IconUser from '~/shared/assets/icons/icon_user.svg';
 import { NavLink } from './NavLink';
 
 export const Header: React.FC = () => {
-    //const session = useSession();
+    // const session = useSession();
 
     return (
         <header
@@ -41,18 +39,18 @@ export const Header: React.FC = () => {
                     <IconBookmark className={'h-6 w-6'} /> Избранные датчики
                 </NavLink>
             </nav>
-            {/* {session.status === 'authenticated' && ( */}
-            <Link href={'/profile'}>
-                <IconUser className={'h-6 w-6'} />
-            </Link>
-            {/* )} */}
-            {/* {session.status === 'unauthenticated' && (
+            {/* {session.status === 'authenticated' && (
+                <Link href={'/profile'}>
+                    <IconUser className={'h-6 w-6'} />
+                </Link>
+            )}
+            {session.status === 'unauthenticated' && (
                 <>
                     <button onClick={console.log}>
                         <IconUser className={'h-6 w-6'} />
-                    </button> */}
-            {/* todo: add popups here */}
-            {/* </>
+                    </button>
+                    {todo: add popups here }
+                </>
             )} */}
         </header>
     );
