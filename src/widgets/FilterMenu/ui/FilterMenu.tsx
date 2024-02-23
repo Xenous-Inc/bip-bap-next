@@ -153,13 +153,14 @@ export const FilterMenu: React.FC<FilterMenuProps> = props => {
                     )}
                     onClick={() => {
                         setState();
+                        setIsOpen(false);
                     }}
                 >
                     <FilterIcon className={cn('h-6 w-6')} /> Показать
                 </button>
                 <button
                     className={cn(
-                        'btn-blank active:btn-outlined flex w-full items-center justify-center gap-x-2  active:!border-lines-color '
+                        'btn-blank active:btn-outlined flex w-full items-center justify-center !gap-x-2 border-2 border-transparent active:!border-lines-color '
                     )}
                     onClick={() => {
                         clearState();
