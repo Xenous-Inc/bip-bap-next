@@ -2,6 +2,7 @@
 import { atom } from 'jotai';
 import { type DisplayType, type ParametrsType } from '~/entities/FilterMenu';
 import { type LayerType } from '~/entities/LayerPicker/model/constants';
+import { type EnumType } from '../../types';
 
 export const SessionKey = {
     FILTER_STATE: 'FILTER_STATE',
@@ -18,7 +19,7 @@ export type SessionValue = {
     };
 };
 
-type SessionKeyType = keyof typeof SessionKey;
+type SessionKeyType = EnumType<typeof SessionKey>;
 
 export const atomWithSessionStorage = <K extends SessionKeyType>(key: K, initialValue: SessionValue[K]) => {
     const getInitialValue = () => {
