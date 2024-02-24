@@ -26,18 +26,31 @@ declare module 'next-auth' {
  */
 export const authOptions: NextAuthOptions = {
     callbacks: {
-        session: ({ session, user }) => ({
+        jwt: async ({ token }) => {
+            if (!token.email) return token;
+
+            const user = await db.user.findUnique({ where: { id: token.sub } });
+
+            if (!user) return token;
+
+            return {
+                ...token,
+                type: user.type,
+            };
+        },
+        session: ({ session, token }) => ({
             ...session,
             user: {
                 ...session.user,
-                id: user.id,
+                id: token.sub,
+                type: token.type,
             },
         }),
     },
     adapter: PrismaAdapter(db),
     providers: [
         CredentialsProvider({
-            name: 'Credentials',
+            name: 'credentials',
             credentials: {
                 email: { label: 'email', type: 'email', placeholder: 'Enter email' },
                 password: { label: 'Password', type: 'password' },
@@ -50,11 +63,11 @@ export const authOptions: NextAuthOptions = {
                 const user = await db.user.findUnique({
                     where: { email: credentials?.email },
                 });
-
+                console.log('USER', user);
                 if (!user?.password) return null;
 
                 const passwordsMatch = await bcrypt.compare(credentials.password, user.password);
-
+                console.log('PASSWORD', passwordsMatch);
                 if (!passwordsMatch) return null;
 
                 return user;
