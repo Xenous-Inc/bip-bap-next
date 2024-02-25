@@ -1,13 +1,17 @@
 'use client';
 import cn from 'classnames';
+import { type BBox } from 'geojson';
 import type mapboxgl from 'mapbox-gl';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import Map, { type MapRef, Marker, type ViewState } from 'react-map-gl';
+import { type PointFeature } from 'supercluster';
+import useSupercluster from 'use-supercluster';
 import { Loader } from '~/entities/Loader';
 import MarkerIcon from '~/shared/assets/icons/marker.svg';
 import { env } from '~/shared/lib';
 import { api } from '~/trpc/react';
+import { type RouterOutputs } from '~/trpc/shared';
 
 const initialViewState: ViewState = {
     longitude: 73.3682,
@@ -31,6 +35,10 @@ const getCoords = (bbox: mapboxgl.LngLatBounds | undefined) => {
     return [bbox.getWest(), bbox.getSouth(), bbox.getEast(), bbox.getNorth()];
 };
 
+type SensorOutputType = RouterOutputs['sensor']['getByLocation'];
+
+type SensorProps = Omit<SensorOutputType[number], 'latitude' | 'longitude'>;
+
 export const MapComponent = () => {
     const mapRef = useRef<MapRef>(null);
 
@@ -45,6 +53,8 @@ export const MapComponent = () => {
         trpc: { abortOnUnmount: !!coords },
     });
 
+    const sensorLoaded = sensors.data && !sensors.error ? sensors.data : [];
+
     const handleMapMove = useCallback(() => {
         const bbox = mapRef.current?.getBounds();
         setCoords(getCoords(bbox));
@@ -54,6 +64,30 @@ export const MapComponent = () => {
         const bbox = mapRef.current?.getBounds();
         setCoords(getCoords(bbox));
     }, []);
+    const bounds = mapRef.current ? (mapRef.current.getMap().getBounds().toArray().flat() as BBox) : undefined;
+    const points: Array<PointFeature<SensorProps>> = sensorLoaded.map(sensor => ({
+        type: 'Feature',
+        properties: {
+            id: sensor.id,
+            location: sensor.location,
+            name: sensor.name,
+            model: sensor.model,
+            version: sensor.version,
+            firmwareVersion: sensor.firmwareVersion,
+            serialNumber: sensor.serialNumber,
+        },
+        geometry: {
+            type: 'Point',
+            coordinates: [sensor.longitude, sensor.latitude],
+        },
+    }));
+
+    const { clusters, supercluster } = useSupercluster({
+        bounds: bounds,
+        points: points,
+        zoom: viewState.zoom,
+        options: { radius: 75, maxZoom: 12 },
+    });
 
     useEffect(() => {
         setIsLoading(sensors.isLoading);
@@ -79,11 +113,56 @@ export const MapComponent = () => {
                 {sensors.isLoading ? (
                     <Loader />
                 ) : (
-                    sensors.data?.map(sensor => {
+                    clusters.map(cluster => {
+                        const [longitude, latitude] = cluster.geometry.coordinates;
+                        //@ts-ignore
+                        const { cluster: isCluster, point_count: pointCount } = cluster.properties;
+
+                        if (isCluster) {
+                            return (
+                                <Marker
+                                    key={`cluste-${cluster.properties.id}`}
+                                    latitude={latitude ?? 0}
+                                    longitude={longitude ?? 0}
+                                >
+                                    <div
+                                        className='flex items-center justify-center bg-green-500 text-white'
+                                        style={{
+                                            width: `${10 + (pointCount / points.length) * 50}px`,
+                                            height: `${10 + (pointCount / points.length) * 50}px`,
+                                            borderRadius: '100%',
+                                        }}
+                                        onClick={() => {
+                                            const expansionZoom = Math.min(
+                                                //@ts-ignore
+                                                supercluster.getClusterExpansionZoom(cluster.id),
+                                                20
+                                            );
+
+                                            setViewState({
+                                                ...viewState,
+                                                //@ts-ignore
+                                                latitude,
+                                                //@ts-ignore
+                                                longitude,
+                                                zoom: expansionZoom,
+                                                transitionDuration: 'auto',
+                                            });
+                                        }}
+                                    >
+                                        {pointCount}
+                                    </div>
+                                </Marker>
+                            );
+                        }
+
                         return (
                             <Marker
-                                longitude={sensor.longitude}
-                                latitude={sensor.latitude}
+                                key={`cluste-${cluster.properties.id}`}
+                                //@ts-ignore
+                                latitude={latitude}
+                                //@ts-ignore
+                                longitude={longitude}
                                 anchor='bottom'
                                 style={{ display: 'flex', width: 50, height: 50 }}
                             >
