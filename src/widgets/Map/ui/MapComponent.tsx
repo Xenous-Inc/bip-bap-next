@@ -5,7 +5,7 @@ import type mapboxgl from 'mapbox-gl';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import Map, { type MapRef, Marker, type ViewState } from 'react-map-gl';
-import { type PointFeature } from 'supercluster';
+import { type ClusterProperties, type PointFeature } from 'supercluster';
 import useSupercluster from 'use-supercluster';
 import { Loader } from '~/entities/Loader';
 import MarkerIcon from '~/shared/assets/icons/marker.svg';
@@ -37,7 +37,7 @@ const getCoords = (bbox: mapboxgl.LngLatBounds | undefined) => {
 
 type SensorOutputType = RouterOutputs['sensor']['getByLocation'];
 
-type SensorProps = Omit<SensorOutputType[number], 'latitude' | 'longitude'>;
+type SensorProps = { sensorId: string } & Omit<SensorOutputType[number], 'latitude' | 'longitude' | 'id'>;
 
 export const MapComponent = () => {
     const mapRef = useRef<MapRef>(null);
@@ -64,11 +64,13 @@ export const MapComponent = () => {
         const bbox = mapRef.current?.getBounds();
         setCoords(getCoords(bbox));
     }, []);
+
     const bounds = mapRef.current ? (mapRef.current.getMap().getBounds().toArray().flat() as BBox) : undefined;
-    const points: Array<PointFeature<SensorProps>> = sensorLoaded.map(sensor => ({
+
+    const points = sensorLoaded.map(sensor => ({
         type: 'Feature',
         properties: {
-            id: sensor.id,
+            sensorId: sensor.id,
             location: sensor.location,
             name: sensor.name,
             model: sensor.model,
@@ -80,13 +82,13 @@ export const MapComponent = () => {
             type: 'Point',
             coordinates: [sensor.longitude, sensor.latitude],
         },
-    }));
+    })) as unknown as Array<PointFeature<ClusterProperties & SensorProps>>;
 
-    const { clusters, supercluster } = useSupercluster({
+    const { clusters } = useSupercluster({
         bounds: bounds,
-        points: points,
+        points,
         zoom: viewState.zoom,
-        options: { radius: 75, maxZoom: 12 },
+        options: { radius: 60, maxZoom: 12 },
     });
 
     useEffect(() => {
@@ -115,13 +117,13 @@ export const MapComponent = () => {
                 ) : (
                     clusters.map(cluster => {
                         const [longitude, latitude] = cluster.geometry.coordinates;
-                        //@ts-ignore
+
                         const { cluster: isCluster, point_count: pointCount } = cluster.properties;
 
                         if (isCluster) {
                             return (
                                 <Marker
-                                    key={`cluste-${cluster.properties.id}`}
+                                    key={`cluster-${cluster.properties.cluster_id}`}
                                     latitude={latitude ?? 0}
                                     longitude={longitude ?? 0}
                                 >
@@ -132,23 +134,6 @@ export const MapComponent = () => {
                                             height: `${10 + (pointCount / points.length) * 50}px`,
                                             borderRadius: '100%',
                                         }}
-                                        onClick={() => {
-                                            const expansionZoom = Math.min(
-                                                //@ts-ignore
-                                                supercluster.getClusterExpansionZoom(cluster.id),
-                                                20
-                                            );
-
-                                            setViewState({
-                                                ...viewState,
-                                                //@ts-ignore
-                                                latitude,
-                                                //@ts-ignore
-                                                longitude,
-                                                zoom: expansionZoom,
-                                                transitionDuration: 'auto',
-                                            });
-                                        }}
                                     >
                                         {pointCount}
                                     </div>
@@ -158,11 +143,9 @@ export const MapComponent = () => {
 
                         return (
                             <Marker
-                                key={`cluste-${cluster.properties.id}`}
-                                //@ts-ignore
-                                latitude={latitude}
-                                //@ts-ignore
-                                longitude={longitude}
+                                key={`point-${cluster.properties.cluster_id}`}
+                                latitude={latitude ?? -1}
+                                longitude={longitude ?? -1}
                                 anchor='bottom'
                                 style={{ display: 'flex', width: 50, height: 50 }}
                             >
