@@ -6,6 +6,8 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import Map, { type MapRef, Marker, type ViewState } from 'react-map-gl';
 import { Loader } from '~/entities/Loader';
 import MarkerIcon from '~/shared/assets/icons/marker.svg';
+import IconMinus from '~/shared/assets/icons/minus.svg';
+import IconPlus from '~/shared/assets/icons/plus.svg';
 import { env } from '~/shared/lib';
 import { api } from '~/trpc/react';
 
@@ -55,6 +57,18 @@ export const MapComponent = () => {
         setCoords(getCoords(bbox));
     }, []);
 
+    const handleZoomIn = () => {
+        const newZoom = Math.min(viewState.zoom + 1, 20);
+        setViewState({ ...viewState, zoom: newZoom });
+        setCoords(getCoords(mapRef.current?.getBounds()));
+    };
+
+    const handleZoomOut = () => {
+        const newZoom = Math.max(viewState.zoom - 1, 0);
+        setViewState({ ...viewState, zoom: newZoom });
+        setCoords(getCoords(mapRef.current?.getBounds()));
+    };
+
     useEffect(() => {
         setIsLoading(sensors.isLoading);
     }, [sensors.isLoading]);
@@ -92,6 +106,20 @@ export const MapComponent = () => {
                         );
                     })
                 )}
+                <div className='absolute right-0 top-1/2 mb-10 mr-2.5 flex -translate-y-1/2 transform flex-col gap-6'>
+                    <button
+                        onClick={handleZoomIn}
+                        className='flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md'
+                    >
+                        <IconPlus style={{ width: '31px', height: '31px' }} />
+                    </button>
+                    <button
+                        onClick={handleZoomOut}
+                        className='flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md'
+                    >
+                        <IconMinus style={{ width: '31px', height: '31px' }} />
+                    </button>
+                </div>
             </Map>
         </div>
     );
