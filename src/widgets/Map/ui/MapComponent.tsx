@@ -40,10 +40,13 @@ export const MapComponent = () => {
 
     const [isLoading, setIsLoading] = useState(true);
 
-    const sensors = api.sensor.getByLocation.useQuery(coords, {
-        enabled: !!coords,
-        trpc: { abortOnUnmount: !!coords },
-    });
+    const sensors = api.sensor.getByLocation.useQuery(
+        { location: coords },
+        {
+            enabled: !!coords,
+            trpc: { abortOnUnmount: !!coords },
+        }
+    );
 
     const handleMapMove = useCallback(() => {
         const bbox = mapRef.current?.getBounds();

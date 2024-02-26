@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { env } from '~/shared/lib';
 import { api } from '~/trpc/react';
 import { createTRPCRouter, publicProcedure } from '../trpc';
+import { SensorDataType } from './sensorData';
 
 export const sensorRouter = createTRPCRouter({
     createSensor: publicProcedure
@@ -41,43 +42,93 @@ export const sensorRouter = createTRPCRouter({
         });
         return deletedSensor;
     }),
-    getByLocation: publicProcedure.input(z.array(z.number()).length(4)).query(async ({ ctx, input }) => {
-        const sensors = await ctx.db.sensor.findMany({
-            where: {
-                latitude: {
-                    gte: input[1],
-                    lte: input[3],
+    getByLocation: publicProcedure
+        .input(z.object({ location: z.array(z.number()).length(4), filter: z.array(z.enum(SensorDataType)).nullish() }))
+        .query(async ({ ctx, input }) => {
+            const sensors = await ctx.db.sensor.findMany({
+                where: {
+                    latitude: {
+                        gte: input.location[1],
+                        lte: input.location[3],
+                    },
+                    longitude: {
+                        gte: input.location[0],
+                        lte: input.location[2],
+                    },
                 },
-                longitude: {
-                    gte: input[0],
-                    lte: input[2],
-                },
-            },
-        });
-        const sensorsWithLocations = await Promise.all(
-            sensors.map(async sensor => {
-                try {
-                    const response = await ctx.http.get(
-                        `https://api.mapbox.com/geocoding/v5/mapbox.places/${sensor.longitude},${sensor.latitude}.json?types=address&language=ru&access_token=${env.NEXT_PUBLIC_MAPBOX_TOKEN}`
-                    );
+            });
 
-                    if (response.status !== 200) {
-                        return { ...sensor, location: 'Undefined location' };
+            const filteredSensorData = await Promise.all(
+                sensors.map(async sensor => {
+                    if (!input.filter) {
+                        return await ctx.db.sensorData.findMany({
+                            where: {
+                                sensorId: sensor.id,
+                            },
+                        });
                     }
+                    switch (input.filter.length) {
+                        case 1: {
+                            return await ctx.db.sensorData.findMany({
+                                where: {
+                                    sensorId: sensor.id,
+                                    type: input.filter[0],
+                                },
+                            });
+                        }
+                        case 2: {
+                            const firstTypeData = await ctx.db.sensorData.findMany({
+                                where: {
+                                    sensorId: sensor.id,
+                                    type: input.filter[0],
+                                },
+                            });
+                            const secondTypeData = await ctx.db.sensorData.findMany({
+                                where: {
+                                    sensorId: sensor.id,
+                                    type: input.filter[1],
+                                },
+                            });
 
-                    const data = response.data;
-                    const location = data.features[0].place_name_ru;
+                            return [...firstTypeData, ...secondTypeData];
+                        }
+                        case 3: {
+                            return await ctx.db.sensorData.findMany({
+                                where: {
+                                    sensorId: sensor.id,
+                                },
+                            });
+                        }
+                        default:
+                            return [];
+                    }
+                })
+            );
 
-                    return { ...sensor, location };
-                } catch (error) {
-                    console.error('Error fetching location for sensor:', error);
-                    return { ...sensor, location: 'Error fetching location' };
-                }
-            })
-        );
+            const sensorsWithLocations = await Promise.all(
+                sensors.map(async sensor => {
+                    try {
+                        const response = await ctx.http.get(
+                            `https://api.mapbox.com/geocoding/v5/mapbox.places/${sensor.longitude},${sensor.latitude}.json?types=address&language=ru&access_token=${env.NEXT_PUBLIC_MAPBOX_TOKEN}`
+                        );
 
-        return sensorsWithLocations;
-    }),
+                        if (response.status !== 200) {
+                            return { ...sensor, location: 'Undefined location', sensorData: filteredSensorData };
+                        }
+
+                        const data = response.data;
+                        const location = data.features[0].place_name_ru;
+
+                        return { ...sensor, location, sensorData: filteredSensorData };
+                    } catch (error) {
+                        console.error('Error fetching location for sensor:', error);
+                        return { ...sensor, location: 'Error fetching location', sensorData: filteredSensorData };
+                    }
+                })
+            );
+
+            return sensorsWithLocations;
+        }),
     updateSensor: publicProcedure
         .input(
             z.object({
@@ -112,6 +163,7 @@ export const sensorRouter = createTRPCRouter({
         }),
     getAll: publicProcedure.query(async ({ ctx }) => {
         const sensors = await ctx.db.sensor.findMany();
+
         const sensorsWithLocations = await Promise.all(
             sensors.map(async sensor => {
                 try {
@@ -141,6 +193,7 @@ export const sensorRouter = createTRPCRouter({
             z.object({
                 limit: z.number().min(1).max(100).nullish(),
                 cursor: z.string().nullish(),
+                filter: z.array(z.enum(SensorDataType)).nullish(),
             })
         )
         .query(async opts => {
@@ -154,7 +207,55 @@ export const sensorRouter = createTRPCRouter({
                     id: 'asc',
                 },
             });
+
             let nextCursor: typeof cursor | undefined = undefined;
+
+            const filteredSensorData = await Promise.all(
+                sensors.map(async sensor => {
+                    if (!opts.input.filter) {
+                        return await opts.ctx.db.sensorData.findMany({
+                            where: {
+                                sensorId: sensor.id,
+                            },
+                        });
+                    }
+                    switch (opts.input.filter.length) {
+                        case 1: {
+                            return await opts.ctx.db.sensorData.findMany({
+                                where: {
+                                    sensorId: sensor.id,
+                                    type: opts.input.filter[0],
+                                },
+                            });
+                        }
+                        case 2: {
+                            const firstTypeData = await opts.ctx.db.sensorData.findMany({
+                                where: {
+                                    sensorId: sensor.id,
+                                    type: opts.input.filter[0],
+                                },
+                            });
+                            const secondTypeData = await opts.ctx.db.sensorData.findMany({
+                                where: {
+                                    sensorId: sensor.id,
+                                    type: opts.input.filter[1],
+                                },
+                            });
+
+                            return [...firstTypeData, ...secondTypeData];
+                        }
+                        case 3: {
+                            return await opts.ctx.db.sensorData.findMany({
+                                where: {
+                                    sensorId: sensor.id,
+                                },
+                            });
+                        }
+                        default:
+                            return [];
+                    }
+                })
+            );
             const sensorsWithLocations = await Promise.all(
                 sensors.map(async sensor => {
                     try {
@@ -163,16 +264,16 @@ export const sensorRouter = createTRPCRouter({
                         );
 
                         if (response.status !== 200) {
-                            return { ...sensor, location: 'Undefined location' };
+                            return { ...sensor, location: 'Undefined location', filteredSensorData };
                         }
 
                         const data = await response.data;
                         const location: string = await data.features[0].place_name_ru;
 
-                        return { ...sensor, location };
+                        return { ...sensor, location, filteredSensorData };
                     } catch (error) {
                         console.error('Error fetching location for sensor:', error);
-                        return { ...sensor, location: 'Error fetching location' };
+                        return { ...sensor, location: 'Error fetching location', filteredSensorData };
                     }
                 })
             );

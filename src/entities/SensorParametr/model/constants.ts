@@ -1,6 +1,6 @@
 export const ParametrsValue = {
-    PM25: 'PM 2.5',
-    PM10: 'PM 10',
+    PM25: 'PM25',
+    PM10: 'PM10',
     OZON: 'Озон',
 } as const;
 

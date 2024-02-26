@@ -7,9 +7,9 @@ export const DisplayValue = {
 export type DisplayType = (typeof DisplayValue)[keyof typeof DisplayValue];
 
 export const ParametrsValue = {
-    PM25: 'pm25',
-    PM10: 'pm10',
-    Ozon: 'ozon',
+    PM25: 'PM25',
+    PM10: 'PM10',
+    Ozon: 'OZON',
 } as const;
 
 export type ParametrsType = (typeof ParametrsValue)[keyof typeof ParametrsValue];
