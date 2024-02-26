@@ -1,11 +1,26 @@
+'use client';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 export type Params = Record<string, string>;
 
-export const useSearchState = () => {
+export const useSearchState = (initialParams: Params = {}) => {
     const searchParams = useSearchParams();
     const router = useRouter();
+
+    const initializeParams = useCallback(() => {
+        const prevParams = new URLSearchParams(searchParams.toString());
+
+        Object.keys(initialParams).forEach(key => {
+            if (initialParams[key]) prevParams.set(key, initialParams[key]!);
+        });
+
+        router.push(`?${prevParams.toString()}`);
+    }, [initialParams, searchParams, router]);
+
+    useEffect(() => {
+        initializeParams();
+    }, [initializeParams]);
 
     const get = useCallback(() => {
         const params: Params = {};

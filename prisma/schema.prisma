@@ -86,20 +86,20 @@ model SensorData {
   type      SensorDataType
   value     Float
   isDeleted Boolean
-  sensor    Sensor         @relation(fields: [sensorId], references: [id])
-  sensorId  String
-}
+  sensor    Sensor            @relation(fields: [sensorId], references: [id])
+  sensorId  String 
+} 
 
 model Sensor {
-  id              String       @id @default(cuid())
-  name            String       @unique
-  model           Int
-  version         Float
-  firmwareVersion String
-  serialNumber    String
-  latitude        Float
-  longitude       Float
-  values          SensorData[]
+  id               String      @id @default(cuid())
+  name             String      @unique
+  model            String
+  version          Float
+  firmwareVersion  String
+  serialNumber     String
+  latitude         Float  
+  longitude        Float
+  values           SensorData[]
   //ownerId          String  
   //owner            User @relation( fields: [ownerId], references: [id])
 }

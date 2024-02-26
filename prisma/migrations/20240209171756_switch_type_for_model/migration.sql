@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Sensor" ALTER COLUMN "model" SET DATA TYPE TEXT;

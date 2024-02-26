@@ -2,14 +2,13 @@
 
 import { Disclosure } from '@headlessui/react';
 import cn from 'classnames';
-import { DisplayValue, ParametrsValue } from '~/entities/FilterMenu';
+import { DisplayValue, ParametrsValue, useSideSheetState } from '~/entities/FilterMenu';
 import { SideSheet } from '~/entities/SideSheet';
 import FilterIcon from '~/shared/assets/icons/filter.svg';
 import IconClose from '~/shared/assets/icons/icon_close.svg';
 import MenuIcon from '~/shared/assets/icons/menu-icon.svg';
 import Sliders from '~/shared/assets/icons/sliders.svg';
 import TrashIcon from '~/shared/assets/icons/trash-2.svg';
-import { useSideSheetState } from '../lib/hooks';
 
 interface FilterMenuProps {
     isOpen: boolean;
@@ -27,17 +26,20 @@ export const FilterMenu: React.FC<FilterMenuProps> = props => {
         selectedParams,
         isAllChecked,
         setIsAllChecked,
+        clearState,
     } = useSideSheetState();
 
     return (
         <SideSheet isOpen={isOpen} setIsOpen={setIsOpen}>
-            <div className={cn('flex flex-col  gap-y-5')}>
+            <div className={cn('flex flex-col gap-y-5')}>
                 <div className={cn('flex flex-row items-center justify-between')}>
                     <div className={cn('flex flex-row items-center justify-center gap-x-2')}>
                         <Sliders width='14' height='14' />
                         Фильтры
                     </div>
-                    <IconClose className={cn('h-6 w-6')} />
+                    <button onClick={() => setIsOpen(false)}>
+                        <IconClose className={cn('h-6 w-6')} />
+                    </button>
                 </div>
                 <Disclosure>
                     <Disclosure.Button className={cn('relative mt-5 flex flex-row items-center justify-between')}>
@@ -144,16 +146,26 @@ export const FilterMenu: React.FC<FilterMenuProps> = props => {
                     </Disclosure.Panel>
                 </Disclosure>
             </div>
-            <div className={'flex grow flex-col items-center justify-end'}>
+            <div className={'flex grow flex-col items-center justify-end gap-y-2'}>
                 <button
-                    className={cn('btn-outlined flex w-full items-center justify-center')}
+                    className={cn(
+                        'btn-outlined active:btn-filled flex w-full items-center justify-center duration-100'
+                    )}
                     onClick={() => {
                         setState();
+                        setIsOpen(false);
                     }}
                 >
                     <FilterIcon className={cn('h-6 w-6')} /> Показать
                 </button>
-                <button className={cn('btn-blank flex w-full items-center justify-center gap-x-2')}>
+                <button
+                    className={cn(
+                        'btn-blank active:btn-outlined flex w-full items-center justify-center !gap-x-2 border-2 border-transparent active:!border-lines-color '
+                    )}
+                    onClick={() => {
+                        clearState();
+                    }}
+                >
                     <TrashIcon className={cn('h-4 w-4')} /> Сброс
                 </button>
             </div>
