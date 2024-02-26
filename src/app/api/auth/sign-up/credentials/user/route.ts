@@ -21,11 +21,6 @@ export const POST = async (request: NextRequest) => {
             email: input.data.email,
             password: hashedPassword,
             type: UserType.USER,
-            // accounts: {
-            //     create: {
-            //         userId:
-            //     },
-            // },
         },
     });
 
