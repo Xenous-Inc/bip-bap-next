@@ -56,14 +56,15 @@ enum UserType {
 model User {
   id            String    @id @default(cuid())
   name          String?
-  email         String?   @unique
+  email         String    @unique
   emailVerified DateTime?
   image         String?
+  password      String?
   accounts      Account[]
   sessions      Session[]
   posts         Post[]
   type          UserType
- // sensors       Sensor[]
+  // sensors       Sensor[]
 }
 
 model VerificationToken {
@@ -81,7 +82,7 @@ enum SensorDataType {
 }
 
 model SensorData {
-  id        String            @id @default(cuid())
+  id        String         @id @default(cuid())
   type      SensorDataType
   value     Float
   isDeleted Boolean
@@ -101,5 +102,4 @@ model Sensor {
   values           SensorData[]
   //ownerId          String  
   //owner            User @relation( fields: [ownerId], references: [id])
-
 }
