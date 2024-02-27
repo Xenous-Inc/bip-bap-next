@@ -19,7 +19,7 @@ interface SensorInfoProps {
 
 export const SensorInfo: React.FC<SensorInfoProps> = props => {
     const {
-        sensor: { id, name, model, location, sensorData },
+        sensor: { name, model, location, sensorData },
     } = props;
     return (
         <Disclosure>

@@ -1,11 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { z } from 'zod';
 import { env } from '~/shared/lib';
-import { api } from '~/trpc/react';
 import { createTRPCRouter, publicProcedure } from '../trpc';
 import { SensorDataType } from './sensorData';
-
-type SensorData = typeof SensorDataType;
 
 export const sensorRouter = createTRPCRouter({
     createSensor: publicProcedure
