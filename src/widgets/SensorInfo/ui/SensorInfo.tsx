@@ -9,7 +9,6 @@ import MapButton from '~/shared/assets/icons/map-button.svg';
 import PointIcon from '~/shared/assets/icons/map-pin.svg';
 import MenuIcon from '~/shared/assets/icons/menu-icon.svg';
 import SettingsIcon from '~/shared/assets/icons/settings.svg';
-import { api } from '~/trpc/react';
 import { type RouterOutputs } from '~/trpc/shared';
 
 type SensorInfoType = RouterOutputs['sensor']['getByLocation'][number];
@@ -61,14 +60,14 @@ export const SensorInfo: React.FC<SensorInfoProps> = props => {
             </Disclosure.Button>
             <Disclosure.Panel className={cn('rounded-md rounded-t-none bg-white')}>
                 <div className={cn('mx-7 mt-3 h-[1px]  bg-lines-color')}></div>
-                {sensorData.map(data => {
-                    return data.map(el => {
+                {sensorData.map(el => {
+                    return (
                         <SensorParametr
                             parametr={ParametrsValue[el.type]}
                             measureUnit={MeasureUnits[el.type]}
                             parametrValue={el.value}
-                        />;
-                    });
+                        />
+                    );
                 })}
             </Disclosure.Panel>
         </Disclosure>

@@ -2,7 +2,8 @@
 import cn from 'classnames';
 import { useAtomValue } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
-import { type ParametrsType, filterStateAtom } from '~/entities/FilterMenu';
+import { filterStateAtom } from '~/entities/FilterMenu';
+import { stringify } from '~/entities/FilterMenu/model/state';
 import { FilterMenuButton } from '~/features/FilterMenuButton/ui/FilterMenuButton';
 import IconList from '~/shared/assets/icons/icon_list.svg';
 import { api } from '~/trpc/react';
@@ -10,15 +11,13 @@ import { FilterMenu } from '~/widgets/FilterMenu';
 import { SensorInfo } from '~/widgets/SensorInfo';
 import { useVirtualSensors } from './helpers/useVirtualSensors';
 
-const stringify = (params: Record<ParametrsType, boolean>): ParametrsType[] => {
-    return Object.keys(params).filter(param => params[param as ParametrsType]) as ParametrsType[];
-};
-
 export default () => {
     const [isOpenFilterMenu, setIsOpenFilterMenu] = useState(false);
+
     const filterState = useAtomValue(filterStateAtom);
+
     const params = stringify(filterState.params);
-    const display = filterState.display;
+
     const { hasNextPage, data, fetchNextPage, isFetchingNextPage, isLoading } =
         api.sensor.infinitySensors.useInfiniteQuery(
             {

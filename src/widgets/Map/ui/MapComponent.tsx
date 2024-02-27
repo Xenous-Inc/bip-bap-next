@@ -1,9 +1,11 @@
 'use client';
 import cn from 'classnames';
+import { useAtomValue } from 'jotai';
 import type mapboxgl from 'mapbox-gl';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import Map, { type MapRef, Marker, type ViewState } from 'react-map-gl';
+import { filterStateAtom, stringify } from '~/entities/FilterMenu/model/state';
 import { Loader } from '~/entities/Loader';
 import MarkerIcon from '~/shared/assets/icons/marker.svg';
 import { env } from '~/shared/lib';
@@ -34,14 +36,18 @@ const getCoords = (bbox: mapboxgl.LngLatBounds | undefined) => {
 export const MapComponent = () => {
     const mapRef = useRef<MapRef>(null);
 
+    const filterState = useAtomValue(filterStateAtom);
+
     const [viewState, setViewState] = useState<ViewState>(initialViewState);
 
     const [coords, setCoords] = useState<number[]>([73.28031, 54.90021, 73.45509, 55.076992]);
 
+    const params = stringify(filterState.params);
+
     const [isLoading, setIsLoading] = useState(true);
 
     const sensors = api.sensor.getByLocation.useQuery(
-        { location: coords },
+        { location: coords, filter: params },
         {
             enabled: !!coords,
             trpc: { abortOnUnmount: !!coords },

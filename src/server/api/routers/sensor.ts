@@ -5,6 +5,8 @@ import { api } from '~/trpc/react';
 import { createTRPCRouter, publicProcedure } from '../trpc';
 import { SensorDataType } from './sensorData';
 
+type SensorData = typeof SensorDataType;
+
 export const sensorRouter = createTRPCRouter({
     createSensor: publicProcedure
         .input(
@@ -45,84 +47,74 @@ export const sensorRouter = createTRPCRouter({
     getByLocation: publicProcedure
         .input(z.object({ location: z.array(z.number()).length(4), filter: z.array(z.enum(SensorDataType)).nullish() }))
         .query(async ({ ctx, input }) => {
-            const sensors = await ctx.db.sensor.findMany({
-                where: {
-                    latitude: {
-                        gte: input.location[1],
-                        lte: input.location[3],
-                    },
-                    longitude: {
-                        gte: input.location[0],
-                        lte: input.location[2],
-                    },
-                },
-            });
+            const sensors =
+                !input.filter || input.filter.length === 3
+                    ? await ctx.db.sensor.findMany({
+                          where: {
+                              latitude: {
+                                  gte: input.location[1],
+                                  lte: input.location[3],
+                              },
+                              longitude: {
+                                  gte: input.location[0],
+                                  lte: input.location[2],
+                              },
+                          },
+                      })
+                    : await ctx.db.sensor.findMany({
+                          where: {
+                              latitude: {
+                                  gte: input.location[1],
+                                  lte: input.location[3],
+                              },
+                              longitude: {
+                                  gte: input.location[0],
+                                  lte: input.location[2],
+                              },
+                              values: {
+                                  some: {
+                                      OR: [
+                                          {
+                                              type: input.filter[0],
+                                          },
+                                          {
+                                              type: input.filter[1],
+                                          },
+                                      ],
+                                  },
+                              },
+                          },
+                      });
 
-            const filteredSensorData = await Promise.all(
+            const SensorWithSensorData = await Promise.all(
                 sensors.map(async sensor => {
-                    if (!input.filter) {
-                        return await ctx.db.sensorData.findMany({
-                            where: {
-                                sensorId: sensor.id,
-                            },
-                        });
-                    }
-                    switch (input.filter.length) {
-                        case 1: {
-                            return await ctx.db.sensorData.findMany({
-                                where: {
-                                    sensorId: sensor.id,
-                                    type: input.filter[0],
-                                },
-                            });
-                        }
-                        case 2: {
-                            const firstTypeData = await ctx.db.sensorData.findMany({
-                                where: {
-                                    sensorId: sensor.id,
-                                    type: input.filter[0],
-                                },
-                            });
-                            const secondTypeData = await ctx.db.sensorData.findMany({
-                                where: {
-                                    sensorId: sensor.id,
-                                    type: input.filter[1],
-                                },
-                            });
-
-                            return [...firstTypeData, ...secondTypeData];
-                        }
-                        case 3: {
-                            return await ctx.db.sensorData.findMany({
-                                where: {
-                                    sensorId: sensor.id,
-                                },
-                            });
-                        }
-                        default:
-                            return [];
-                    }
+                    const sensorData = await ctx.db.sensorData.findMany({
+                        where: {
+                            sensorId: sensor.id,
+                        },
+                    });
+                    return { ...sensor, sensorData: sensorData };
                 })
             );
 
             const sensorsWithLocations = await Promise.all(
-                sensors.map(async sensor => {
+                SensorWithSensorData.map(async sensor => {
                     try {
                         const response = await ctx.http.get(
-                            `https://api.mapbox.com/geocoding/v5/mapbox.places/${sensor.longitude},${sensor.latitude}.json?types=address&language=ru&access_token=${env.NEXT_PUBLIC_MAPBOX_TOKEN}`
+                            `https://api.mapbox.com/geocoding/v5/mapbox.places/${sensor?.longitude},${sensor?.latitude}.json?types=address&language=ru&access_token=${env.NEXT_PUBLIC_MAPBOX_TOKEN}`
                         );
 
                         if (response.status !== 200) {
-                            return { ...sensor, location: 'Undefined location', sensorData: filteredSensorData };
+                            return { ...sensor, location: 'Undefined location' };
                         }
 
                         const data = response.data;
                         const location = data.features[0].place_name_ru;
 
-                        return { ...sensor, location, sensorData: filteredSensorData };
+                        return { ...sensor, location };
                     } catch (error) {
                         console.error('Error fetching location for sensor:', error);
-                        return { ...sensor, location: 'Error fetching location', sensorData: filteredSensorData };
+                        return { ...sensor, location: 'Error fetching location' };
                     }
                 })
             );
@@ -200,80 +192,62 @@ export const sensorRouter = createTRPCRouter({
             const { input } = opts;
             const limit = input.limit ?? 50;
             const { cursor } = input;
-            const sensors = await opts.ctx.db.sensor.findMany({
-                take: limit + 1,
-                cursor: cursor ? { id: cursor } : undefined,
-                orderBy: {
-                    id: 'asc',
-                },
-            });
+            const sensors =
+                !input.filter || input.filter.length === 3
+                    ? await opts.ctx.db.sensor.findMany({})
+                    : await opts.ctx.db.sensor.findMany({
+                          take: limit + 1,
+                          cursor: cursor ? { id: cursor } : undefined,
+                          orderBy: {
+                              id: 'asc',
+                          },
+                          where: {
+                              values: {
+                                  some: {
+                                      OR: [
+                                          {
+                                              type: input.filter[0],
+                                          },
+                                          {
+                                              type: input.filter[1],
+                                          },
+                                      ],
+                                  },
+                              },
+                          },
+                      });
 
             let nextCursor: typeof cursor | undefined = undefined;
 
-            const filteredSensorData = await Promise.all(
+            const SensorWithSensorData = await Promise.all(
                 sensors.map(async sensor => {
-                    if (!opts.input.filter) {
-                        return await opts.ctx.db.sensorData.findMany({
-                            where: {
-                                sensorId: sensor.id,
-                            },
-                        });
-                    }
-                    switch (opts.input.filter.length) {
-                        case 1: {
-                            return await opts.ctx.db.sensorData.findMany({
-                                where: {
-                                    sensorId: sensor.id,
-                                    type: opts.input.filter[0],
-                                },
-                            });
-                        }
-                        case 2: {
-                            const firstTypeData = await opts.ctx.db.sensorData.findMany({
-                                where: {
-                                    sensorId: sensor.id,
-                                    type: opts.input.filter[0],
-                                },
-                            });
-                            const secondTypeData = await opts.ctx.db.sensorData.findMany({
-                                where: {
-                                    sensorId: sensor.id,
-                                    type: opts.input.filter[1],
-                                },
-                            });
-
-                            return [...firstTypeData, ...secondTypeData];
-                        }
-                        case 3: {
-                            return await opts.ctx.db.sensorData.findMany({
-                                where: {
-                                    sensorId: sensor.id,
-                                },
-                            });
-                        }
-                        default:
-                            return [];
-                    }
+                    const sensorData = await opts.ctx.db.sensorData.findMany({
+                        where: {
+                            sensorId: sensor.id,
+                        },
+                    });
+                    return { ...sensor, sensorData: sensorData };
                 })
             );
+
             const sensorsWithLocations = await Promise.all(
-                sensors.map(async sensor => {
+                SensorWithSensorData.map(async sensor => {
                     try {
                         const response = await opts.ctx.http.get(
-                            `https://api.mapbox.com/geocoding/v5/mapbox.places/${sensor.longitude},${sensor.latitude}.json?types=address&language=ru&access_token=${env.NEXT_PUBLIC_MAPBOX_TOKEN}`
+                            `https://api.mapbox.com/geocoding/v5/mapbox.places/${sensor?.longitude},${sensor?.latitude}.json?types=address&language=ru&access_token=${env.NEXT_PUBLIC_MAPBOX_TOKEN}`
                         );
 
                         if (response.status !== 200) {
-                            return { ...sensor, location: 'Undefined location', filteredSensorData };
+                            return { ...sensor, location: 'Undefined location' };
                         }
 
                         const data = await response.data;
                         const location: string = await data.features[0].place_name_ru;
 
-                        return { ...sensor, location, filteredSensorData };
+                        return { ...sensor, location };
                     } catch (error) {
                         console.error('Error fetching location for sensor:', error);
-                        return { ...sensor, location: 'Error fetching location', filteredSensorData };
+                        return { ...sensor, location: 'Error fetching location' };
                     }
                 })
             );
