@@ -43,11 +43,12 @@ export const MapComponent = () => {
     const [coords, setCoords] = useState<number[]>([73.28031, 54.90021, 73.45509, 55.076992]);
 
     const params = stringify(filterState.params);
+    const display = filterState.display;
 
     const [isLoading, setIsLoading] = useState(true);
 
     const sensors = api.sensor.getByLocation.useQuery(
-        { location: coords, filter: params },
+        { location: coords, paramsFilter: params, displayFilter: display },
         {
             enabled: !!coords,
             trpc: { abortOnUnmount: !!coords },

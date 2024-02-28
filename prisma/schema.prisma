@@ -84,6 +84,7 @@ model Sensor {
   serialNumber    String
   latitude        Float
   longitude       Float
+  isOnline        Boolean
   values          SensorData[]
 }
 

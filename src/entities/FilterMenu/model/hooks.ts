@@ -1,3 +1,4 @@
+'use client';
 import { useAtom } from 'jotai';
 import { useCallback, useEffect, useState } from 'react';
 import { type ParametrsType, type DisplayType } from '~/entities/FilterMenu';

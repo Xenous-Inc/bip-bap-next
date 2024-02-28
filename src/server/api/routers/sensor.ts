@@ -1,8 +1,44 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { z } from 'zod';
+import { DisplayValue, ParametrsValue } from '~/entities/FilterMenu';
 import { env } from '~/shared/lib';
 import { createTRPCRouter, publicProcedure } from '../trpc';
 import { SensorDataType } from './sensorData';
+
+export const DisplayFilterType = ['all-sensors', 'out-limit', 'turn-off-sensors'] as const; // ozon -> 0.2 pm25 -> 40.5 pm10-> 155
+
+const getLimitValue = (type: (typeof SensorDataType)[number]) => {
+    switch (type) {
+        case ParametrsValue.PM25: {
+            return 40.5;
+        }
+        case ParametrsValue.PM10: {
+            return 155;
+        }
+        case ParametrsValue.Ozon: {
+            console.log('OZON');
+            return 0.2;
+        }
+    }
+};
+
+const getDisplayCondition = (
+    inputDisplay: (typeof DisplayFilterType)[number],
+    value: number,
+    type: (typeof SensorDataType)[number],
+    isOnline: boolean
+) => {
+    switch (inputDisplay) {
+        case DisplayValue.AllSensors: {
+            return true;
+        }
+        case DisplayValue.OutLimit: {
+            return value > getLimitValue(type);
+        }
+        case DisplayValue.TurnOff: {
+            return isOnline;
+        }
+    }
+};
 
 export const sensorRouter = createTRPCRouter({
     createSensor: publicProcedure
@@ -15,6 +51,7 @@ export const sensorRouter = createTRPCRouter({
                 serialNumber: z.string().default('default-serialNumber'),
                 latitude: z.number(),
                 longitude: z.number(),
+                isOnline: z.boolean().default(true),
                 //ownerId: z.string().cuid().default('cklns1fzi0000lflw9p2wx7az'),
             })
         )
@@ -28,6 +65,7 @@ export const sensorRouter = createTRPCRouter({
                     serialNumber: input.serialNumber,
                     latitude: input.latitude,
                     longitude: input.longitude,
+                    isOnline: input.isOnline,
                     //ownerId: 'cklns1fzi0000lflw9p2wx7az',
                 },
             });
@@ -42,10 +80,16 @@ export const sensorRouter = createTRPCRouter({
         return deletedSensor;
     }),
     getByLocation: publicProcedure
-        .input(z.object({ location: z.array(z.number()).length(4), filter: z.array(z.enum(SensorDataType)).nullish() }))
+        .input(
+            z.object({
+                location: z.array(z.number()).length(4),
+                paramsFilter: z.array(z.enum(SensorDataType)).nullish(),
+                displayFilter: z.enum(DisplayFilterType),
+            })
+        )
         .query(async ({ ctx, input }) => {
             const sensors =
-                !input.filter || input.filter.length === 3
+                !input.paramsFilter || input.paramsFilter.length === 3
                     ? await ctx.db.sensor.findMany({
                           where: {
                               latitude: {
@@ -64,18 +108,20 @@ export const sensorRouter = createTRPCRouter({
                                   gte: input.location[1],
                                   lte: input.location[3],
                               },
+
                               longitude: {
                                   gte: input.location[0],
                                   lte: input.location[2],
                               },
+
                               values: {
                                   some: {
                                       OR: [
                                           {
-                                              type: input.filter[0],
+                                              type: input.paramsFilter[0],
                                           },
                                           {
-                                              type: input.filter[1],
+                                              type: input.paramsFilter[1],
                                           },
                                       ],
                                   },
@@ -94,8 +140,15 @@ export const sensorRouter = createTRPCRouter({
                 })
             );
 
+            const filteredSensors = SensorWithSensorData.filter(sensor => {
+                const checkGoodSensorData = sensor.sensorData.map(sensorData =>
+                    getDisplayCondition(input.displayFilter, sensorData.value, sensorData.type, sensor.isOnline)
+                );
+                return checkGoodSensorData.includes(true);
+            });
+
             const sensorsWithLocations = await Promise.all(
-                SensorWithSensorData.map(async sensor => {
+                filteredSensors.map(async sensor => {
                     try {
                         const response = await ctx.http.get(
                             `https://api.mapbox.com/geocoding/v5/mapbox.places/${sensor?.longitude},${sensor?.latitude}.json?types=address&language=ru&access_token=${env.NEXT_PUBLIC_MAPBOX_TOKEN}`
@@ -106,6 +159,7 @@ export const sensorRouter = createTRPCRouter({
                         }
 
                         const data = response.data;
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                         const location = data.features[0].place_name_ru;
 
                         return { ...sensor, location };
@@ -129,6 +183,7 @@ export const sensorRouter = createTRPCRouter({
                 serialNumber: z.string(),
                 latitude: z.number(),
                 longitude: z.number(),
+                isOnline: z.boolean().default(true),
                 // ownerId: z.string(),
             })
         )
@@ -145,6 +200,7 @@ export const sensorRouter = createTRPCRouter({
                     serialNumber: input.serialNumber,
                     latitude: input.latitude,
                     longitude: input.longitude,
+                    isOnline: input.isOnline,
                     //ownerId: input.ownerId,
                 },
             });
@@ -165,6 +221,7 @@ export const sensorRouter = createTRPCRouter({
                     }
 
                     const data = response.data;
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                     const location = data.features[0].place_name_ru;
 
                     return { ...sensor, location };
@@ -182,7 +239,8 @@ export const sensorRouter = createTRPCRouter({
             z.object({
                 limit: z.number().min(1).max(100).nullish(),
                 cursor: z.string().nullish(),
-                filter: z.array(z.enum(SensorDataType)).nullish(),
+                paramsFilter: z.array(z.enum(SensorDataType)).nullish(),
+                displayFilter: z.enum(DisplayFilterType),
             })
         )
         .query(async opts => {
@@ -190,8 +248,14 @@ export const sensorRouter = createTRPCRouter({
             const limit = input.limit ?? 50;
             const { cursor } = input;
             const sensors =
-                !input.filter || input.filter.length === 3
-                    ? await opts.ctx.db.sensor.findMany({})
+                !input.paramsFilter || input.paramsFilter.length === 3
+                    ? await opts.ctx.db.sensor.findMany({
+                          take: limit + 1,
+                          cursor: cursor ? { id: cursor } : undefined,
+                          orderBy: {
+                              id: 'asc',
+                          },
+                      })
                     : await opts.ctx.db.sensor.findMany({
                           take: limit + 1,
                           cursor: cursor ? { id: cursor } : undefined,
@@ -203,10 +267,10 @@ export const sensorRouter = createTRPCRouter({
                                   some: {
                                       OR: [
                                           {
-                                              type: input.filter[0],
+                                              type: input.paramsFilter[0],
                                           },
                                           {
-                                              type: input.filter[1],
+                                              type: input.paramsFilter[1],
                                           },
                                       ],
                                   },
@@ -215,7 +279,6 @@ export const sensorRouter = createTRPCRouter({
                       });
 
             let nextCursor: typeof cursor | undefined = undefined;
-
             const SensorWithSensorData = await Promise.all(
                 sensors.map(async sensor => {
                     const sensorData = await opts.ctx.db.sensorData.findMany({
@@ -226,9 +289,15 @@ export const sensorRouter = createTRPCRouter({
                     return { ...sensor, sensorData: sensorData };
                 })
             );
+            const filteredSensors = SensorWithSensorData.filter(sensor => {
+                const checkGoodSensorData = sensor.sensorData.map(sensorData =>
+                    getDisplayCondition(input.displayFilter, sensorData.value, sensorData.type, sensor.isOnline)
+                );
+                return checkGoodSensorData.includes(true);
+            });
 
             const sensorsWithLocations = await Promise.all(
-                SensorWithSensorData.map(async sensor => {
+                filteredSensors.map(async sensor => {
                     try {
                         const response = await opts.ctx.http.get(
                             `https://api.mapbox.com/geocoding/v5/mapbox.places/${sensor?.longitude},${sensor?.latitude}.json?types=address&language=ru&access_token=${env.NEXT_PUBLIC_MAPBOX_TOKEN}`
@@ -239,6 +308,7 @@ export const sensorRouter = createTRPCRouter({
                         }
 
                         const data = await response.data;
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                         const location: string = await data.features[0].place_name_ru;
 
                         return { ...sensor, location };

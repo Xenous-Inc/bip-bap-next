@@ -17,12 +17,14 @@ export default () => {
     const filterState = useAtomValue(filterStateAtom);
 
     const params = stringify(filterState.params);
+    const display = filterState.display;
 
     const { hasNextPage, data, fetchNextPage, isFetchingNextPage, isLoading } =
         api.sensor.infinitySensors.useInfiniteQuery(
             {
                 limit: 9,
-                filter: params,
+                paramsFilter: params,
+                displayFilter: display,
             },
             {
                 getNextPageParam: lastPage => lastPage.nextCursor,
