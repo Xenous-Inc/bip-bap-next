@@ -5,7 +5,7 @@ import type mapboxgl from 'mapbox-gl';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import Map, { type MapRef, Marker, type ViewState } from 'react-map-gl';
-import { filterStateAtom, stringify } from '~/entities/FilterMenu/model/state';
+import { filterStateAtom } from '~/entities/FilterMenu';
 import { Loader } from '~/entities/Loader';
 import MarkerIcon from '~/shared/assets/icons/marker.svg';
 import { env } from '~/shared/lib';
@@ -42,7 +42,7 @@ export const MapComponent = () => {
 
     const [coords, setCoords] = useState<number[]>([73.28031, 54.90021, 73.45509, 55.076992]);
 
-    const params = stringify(filterState.params);
+    const params = filterState.params;
     const display = filterState.display;
 
     const [isLoading, setIsLoading] = useState(true);

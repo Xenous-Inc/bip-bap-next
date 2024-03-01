@@ -1,20 +1,19 @@
 import { z } from 'zod';
+import { ParametrsValue, paramsValueSchema } from '~/entities/FilterMenu';
 import { createTRPCRouter, publicProcedure } from '../trpc';
-
-export const SensorDataType = ['PM10', 'PM25', 'OZON'] as const;
 
 export const sensorDataRouter = createTRPCRouter({
     createSensorData: publicProcedure
         .input(
             z
                 .object({
-                    type: z.enum(SensorDataType),
+                    type: paramsValueSchema,
                     value: z.number(),
                     isDeleted: z.boolean(),
                     sensorId: z.string().cuid(),
                 })
                 .default({
-                    type: SensorDataType[0],
+                    type: ParametrsValue.Ozon,
                     value: 10,
                     isDeleted: false,
                     sensorId: '',
@@ -51,7 +50,7 @@ export const sensorDataRouter = createTRPCRouter({
         .input(
             z.object({
                 id: z.string().cuid(),
-                type: z.enum(SensorDataType),
+                type: paramsValueSchema,
                 value: z.number(),
                 isDeleted: z.boolean(),
                 sensorId: z.string().cuid(),

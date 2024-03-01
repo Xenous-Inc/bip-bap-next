@@ -1,3 +1,4 @@
+import { z } from 'zod';
 export const DisplayValue = {
     AllSensors: 'all-sensors',
     OutLimit: 'out-limit',
@@ -11,6 +12,11 @@ export const ParametrsValue = {
     PM10: 'PM10',
     Ozon: 'OZON',
 } as const;
+
+export const displayValueSchema = z.enum(Object.values(DisplayValue) as unknown as [DisplayType, ...DisplayType[]]);
+export const paramsValueSchema = z.enum(
+    Object.values(ParametrsValue) as unknown as [ParametrsType, ...ParametrsType[]]
+);
 
 export type ParametrsType = (typeof ParametrsValue)[keyof typeof ParametrsValue];
 

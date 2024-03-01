@@ -19,7 +19,7 @@ interface SensorInfoProps {
 
 export const SensorInfo: React.FC<SensorInfoProps> = props => {
     const {
-        sensor: { name, model, location, sensorData },
+        sensor: { name, model, location, values: sensorData, isOnline },
     } = props;
     return (
         <Disclosure>
@@ -42,18 +42,18 @@ export const SensorInfo: React.FC<SensorInfoProps> = props => {
                 </div>
                 <div className={cn('flex flex-row gap-x-14')}>
                     <div className={cn('flex flex-row gap-x-4 ui-not-open:hidden')}>
-                        <button className={cn('btn-filled w-52 items-center justify-center ')}>
+                        <button className={cn('btn-filled w-52 items-center justify-center !bg-green-700')}>
                             <ClockIcon className={cn('h-5 w-5')} />
                             Таймлайн
                         </button>
-                        <button
-                            className={cn('btn-filled w-14  items-center justify-center !bg-btn-green text-white ')}
-                        >
+                        <button className={cn('btn-filled w-14  items-center justify-center  text-white')}>
                             <IconBookmarkWhite className={cn('h-6 w-6')} />
                         </button>
                     </div>
                     <div className={cn('j mr-4 flex-col items-center space-y-4')}>
-                        <div className={cn('ml-1 flex h-2 w-2  rounded-full bg-green-700')}></div>
+                        <div
+                            className={cn('ml-1 flex h-2 w-2  rounded-full', isOnline ? 'bg-green-700' : 'bg-red-700')}
+                        ></div>
                         <MenuIcon className={cn('h-4 w-4 ui-not-open:rotate-180')} />
                     </div>
                 </div>

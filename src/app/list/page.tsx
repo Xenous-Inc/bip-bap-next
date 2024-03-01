@@ -3,7 +3,6 @@ import cn from 'classnames';
 import { useAtomValue } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
 import { filterStateAtom } from '~/entities/FilterMenu';
-import { stringify } from '~/entities/FilterMenu/model/state';
 import { FilterMenuButton } from '~/features/FilterMenuButton/ui/FilterMenuButton';
 import IconList from '~/shared/assets/icons/icon_list.svg';
 import { api } from '~/trpc/react';
@@ -16,7 +15,7 @@ export default () => {
 
     const filterState = useAtomValue(filterStateAtom);
 
-    const params = stringify(filterState.params);
+    const params = filterState.params;
     const display = filterState.display;
 
     const { hasNextPage, data, fetchNextPage, isFetchingNextPage, isLoading } =
