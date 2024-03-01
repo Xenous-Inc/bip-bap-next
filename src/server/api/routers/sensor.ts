@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { z } from 'zod';
 import { env } from '~/shared/lib';
-import { api } from '~/trpc/react';
 import { createTRPCRouter, publicProcedure } from '../trpc';
 
 export const sensorRouter = createTRPCRouter({
@@ -41,7 +40,11 @@ export const sensorRouter = createTRPCRouter({
         });
         return deletedSensor;
     }),
-    getByLocation: publicProcedure.input(z.array(z.number()).length(4)).query(async ({ ctx, input }) => {
+    getByLocation: publicProcedure.input(z.array(z.number()).length(4).optional()).query(async ({ ctx, input }) => {
+        if (input === undefined) {
+            return [];
+        }
+
         const sensors = await ctx.db.sensor.findMany({
             where: {
                 latitude: {
