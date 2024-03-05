@@ -10,8 +10,6 @@ import {
 import { env } from '~/shared/lib';
 import { createTRPCRouter, publicProcedure } from '../trpc';
 
-export const DisplayFilterType = ['all-sensors', 'out-limit', 'turn-off-sensors'] as const;
-
 const Limits = {
     [ParametrsValue.PM25]: 40.5,
     [ParametrsValue.PM10]: 155,
@@ -127,15 +125,7 @@ export const sensorRouter = createTRPCRouter({
                         gte: input.location[0],
                         lte: input.location[2],
                     },
-                    AND: [
-                        {
-                            ...paramsModel.condition,
-                        },
-
-                        {
-                            ...getDisplayCondition(input.displayFilter, paramsModel.selectedParams),
-                        },
-                    ],
+                    AND: [paramsModel.condition, getDisplayCondition(input.displayFilter, paramsModel.selectedParams)],
                 },
             });
             const sensorsWithLocations = await Promise.all(
@@ -249,15 +239,7 @@ export const sensorRouter = createTRPCRouter({
                     id: 'asc',
                 },
                 where: {
-                    AND: [
-                        {
-                            ...paramsModel.condition,
-                        },
-
-                        {
-                            ...getDisplayCondition(input.displayFilter, paramsModel.selectedParams),
-                        },
-                    ],
+                    AND: [paramsModel.condition, getDisplayCondition(input.displayFilter, paramsModel.selectedParams)],
                 },
             });
 
