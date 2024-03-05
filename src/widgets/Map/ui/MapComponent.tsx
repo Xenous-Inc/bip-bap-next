@@ -1,9 +1,8 @@
 'use client';
-
-import { useAtomValue } from 'jotai';
-import type mapboxgl from 'mapbox-gl';
+import cn from 'classnames';
 import { filterStateAtom } from '~/entities/FilterMenu';
 import { type BBox } from 'geojson';
+import { useAtomValue } from 'jotai';
 import { useEffect, useState, useRef, useMemo } from 'react';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import Map, { type MapRef, Marker, type ViewState } from 'react-map-gl';
@@ -49,12 +48,16 @@ export const MapComponent = () => {
     const params = filterState.params;
     const display = filterState.display;
 
-    const { data: sensors = [], isFetching } = api.sensor.getByLocation.useQuery({location: bounds, paramsFilter: params, displayFilter: display}, {
-        queryKey: ['sensor.getByLocation', bounds],
-        trpc: { abortOnUnmount: true },
-        keepPreviousData: true,
-    });
-  
+    const { data: sensors = [], isFetching } = api.sensor.getByLocation.useQuery(
+        { location: bounds, paramsFilter: params, displayFilter: display },
+        {
+            //@ts-ignore
+            queryKey: ['sensor.getByLocation', bounds],
+            trpc: { abortOnUnmount: true },
+            keepPreviousData: true,
+        }
+    );
+
     const points = useMemo(() => {
         return sensors.map(sensor => ({
             type: 'Feature',
@@ -66,13 +69,19 @@ export const MapComponent = () => {
                 version: sensor.version,
                 firmwareVersion: sensor.firmwareVersion,
                 serialNumber: sensor.serialNumber,
+                status: sensor.status,
+                values: sensor.values,
             },
             geometry: {
                 type: 'Point',
                 coordinates: [sensor.longitude, sensor.latitude],
             },
-        })) as unknown as Array<PointFeature<ClusterProperties & SensorProps>>;
+        })) as Array<PointFeature<ClusterProperties & SensorProps>>;
     }, [sensors]);
+
+    useEffect(() => {
+        console.log('POINTS', points);
+    }, [points]);
 
     const { clusters, supercluster } = useSupercluster({
         bounds,
@@ -80,6 +89,9 @@ export const MapComponent = () => {
         zoom: viewState.zoom,
         options: { radius: 60, maxZoom: 12 },
     });
+    useEffect(() => {
+        console.log('CLUSTERS', clusters);
+    }, [clusters]);
 
     const handleZoomIn = () => {
         const newZoom = Math.min(viewState.zoom + 1, 20);
@@ -135,6 +147,8 @@ export const MapComponent = () => {
                                 latitude={latitude}
                                 longitude={longitude}
                                 onClick={() => {
+                                    console.log(cluster.properties);
+
                                     const expansionZoom = Math.min(
                                         supercluster?.getClusterExpansionZoom(cluster.properties.cluster_id) ?? 20,
                                         20
@@ -143,11 +157,10 @@ export const MapComponent = () => {
                                 }}
                             >
                                 <div
-                                    className='flex items-center justify-center bg-green-500 text-white'
+                                    className={'flex items-center justify-center rounded-full bg-btn-green text-white'}
                                     style={{
                                         width: `${10 + (pointCount / points.length) * 50}px`,
                                         height: `${10 + (pointCount / points.length) * 50}px`,
-                                        borderRadius: '100%',
                                     }}
                                 >
                                     {pointCount}
@@ -155,7 +168,9 @@ export const MapComponent = () => {
                             </Marker>
                         );
                     }
-
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                    const color = cluster.properties.status.color as string;
+                    console.log(color);
                     return (
                         <Marker
                             key={`point-${cluster.properties.sensorId}`}
@@ -164,7 +179,7 @@ export const MapComponent = () => {
                             anchor='bottom'
                             style={{ display: 'flex', width: 50, height: 50 }}
                         >
-                            <MarkerIcon className={'fill-btn-green stroke-green-500'} />
+                            <MarkerIcon style={{ fill: color, stroke: color }} />
                         </Marker>
                     );
                 })}
