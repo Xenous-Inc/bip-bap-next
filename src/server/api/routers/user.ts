@@ -10,9 +10,12 @@ export const userRouter = createTRPCRouter({
             data: input,
         });
     }),
-    passwordCheck: protectedProcedure.input(password).mutation(async ({ ctx, input }) => {
-        const user = await ctx.db.user.findUnique({
-            where: { id: ctx.session.user.id },
+    updatePassword: protectedProcedure.input(password).mutation(async ({ ctx, input }) => {
+        const user = await ctx.db.user.update({
+            where: { id: ctx.session.user.id, password: input.oldPassword },
+            data: {
+                password: input.oldPassword,
+            },
         });
 
         if (!user) {
