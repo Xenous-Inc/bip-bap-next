@@ -1,6 +1,8 @@
 'use client';
 import cn from 'classnames';
+import { useAtomValue } from 'jotai';
 import { useEffect, useMemo, useState } from 'react';
+import { filterStateAtom } from '~/entities/FilterMenu';
 import { FilterMenuButton } from '~/features/FilterMenuButton/ui/FilterMenuButton';
 import IconList from '~/shared/assets/icons/icon_list.svg';
 import { api } from '~/trpc/react';
@@ -11,10 +13,17 @@ import { useVirtualSensors } from './helpers/useVirtualSensors';
 export default () => {
     const [isOpenFilterMenu, setIsOpenFilterMenu] = useState(false);
 
+    const filterState = useAtomValue(filterStateAtom);
+
+    const params = filterState.params;
+    const display = filterState.display;
+
     const { hasNextPage, data, fetchNextPage, isFetchingNextPage, isLoading } =
         api.sensor.infinitySensors.useInfiniteQuery(
             {
                 limit: 9,
+                paramsFilter: params,
+                displayFilter: display,
             },
             {
                 getNextPageParam: lastPage => lastPage.nextCursor,

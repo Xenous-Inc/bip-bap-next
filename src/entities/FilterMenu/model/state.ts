@@ -1,3 +1,4 @@
+'use client';
 import { atomWithSessionStorage } from '~/shared/lib/hooks';
 import { initialDisplay, initialParams } from './constants';
 

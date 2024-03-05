@@ -1,7 +1,67 @@
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import { z } from 'zod';
+import {
+    type DisplayType,
+    DisplayValue,
+    type ParametrsType,
+    ParametrsValue,
+    displayValueSchema,
+    paramsValueSchema,
+} from '~/entities/FilterMenu';
 import { env } from '~/shared/lib';
 import { createTRPCRouter, publicProcedure } from '../trpc';
+
+const Limits = {
+    [ParametrsValue.PM25]: 40.5,
+    [ParametrsValue.PM10]: 155,
+    [ParametrsValue.Ozon]: 0.2,
+} as const;
+
+const filterByParams = (paramsFilter: Record<ParametrsType, boolean>) => {
+    return {
+        condition: {
+            values: {
+                some: {
+                    type: {
+                        in: Object.entries(paramsFilter)
+                            .filter(([, value]) => value)
+                            .map(([key]) => key) as ParametrsType[],
+                    },
+                },
+            },
+        },
+        selectedParams: Object.keys(paramsFilter).filter(
+            param => paramsFilter[param as ParametrsType]
+        ) as ParametrsType[],
+    };
+};
+
+const getDisplayCondition = (inputDisplay: DisplayType, selectedParams: ParametrsType[]) => {
+    switch (inputDisplay) {
+        case DisplayValue.AllSensors: {
+            return {};
+        }
+        case DisplayValue.OutLimit: {
+            const OR = selectedParams.map(param => {
+                return {
+                    values: {
+                        some: {
+                            type: param,
+                            value: {
+                                gt: Limits[param],
+                            },
+                        },
+                    },
+                };
+            });
+            return { OR };
+        }
+        case DisplayValue.TurnOff: {
+            return {
+                isOnline: false,
+            };
+        }
+    }
+};
 
 export const sensorRouter = createTRPCRouter({
     createSensor: publicProcedure
@@ -14,6 +74,7 @@ export const sensorRouter = createTRPCRouter({
                 serialNumber: z.string().default('default-serialNumber'),
                 latitude: z.number(),
                 longitude: z.number(),
+                isOnline: z.boolean().default(true),
                 //ownerId: z.string().cuid().default('cklns1fzi0000lflw9p2wx7az'),
             })
         )
@@ -27,6 +88,7 @@ export const sensorRouter = createTRPCRouter({
                     serialNumber: input.serialNumber,
                     latitude: input.latitude,
                     longitude: input.longitude,
+                    isOnline: input.isOnline,
                     //ownerId: 'cklns1fzi0000lflw9p2wx7az',
                 },
             });
@@ -40,47 +102,57 @@ export const sensorRouter = createTRPCRouter({
         });
         return deletedSensor;
     }),
-    getByLocation: publicProcedure.input(z.array(z.number()).length(4).optional()).query(async ({ ctx, input }) => {
-        if (input === undefined) {
-            return [];
-        }
-
-        const sensors = await ctx.db.sensor.findMany({
-            where: {
-                latitude: {
-                    gte: input[1],
-                    lte: input[3],
-                },
-                longitude: {
-                    gte: input[0],
-                    lte: input[2],
-                },
-            },
-        });
-        const sensorsWithLocations = await Promise.all(
-            sensors.map(async sensor => {
-                try {
-                    const response = await ctx.http.get(
-                        `https://api.mapbox.com/geocoding/v5/mapbox.places/${sensor.longitude},${sensor.latitude}.json?types=address&language=ru&access_token=${env.NEXT_PUBLIC_MAPBOX_TOKEN}`
-                    );
-
-                    if (response.status !== 200) {
-                        return { ...sensor, location: 'Undefined location' };
-                    }
-
-                    const data = response.data;
-                    const location = data.features[0].place_name_ru;
-
-                    return { ...sensor, location };
-                } catch (error) {
-                    console.error('Error fetching location for sensor:', error);
-                    return { ...sensor, location: 'Error fetching location' };
-                }
+    getByLocation: publicProcedure
+        .input(
+            z.object({
+                location: z.array(z.number()).length(4),
+                paramsFilter: z.record(paramsValueSchema, z.boolean()),
+                displayFilter: displayValueSchema,
             })
-        );
+        )
+        .query(async ({ ctx, input }) => {
+            const paramsModel = filterByParams(input.paramsFilter as Record<ParametrsType, boolean>);
+            const sensors = await ctx.db.sensor.findMany({
+                include: {
+                    values: true,
+                },
+                where: {
+                    latitude: {
+                        gte: input.location[1],
+                        lte: input.location[3],
+                    },
+                    longitude: {
+                        gte: input.location[0],
+                        lte: input.location[2],
+                    },
+                    AND: [paramsModel.condition, getDisplayCondition(input.displayFilter, paramsModel.selectedParams)],
+                },
+            });
+            const sensorsWithLocations = await Promise.all(
+                sensors.map(async sensor => {
+                    try {
+                        const response = await ctx.http.get(
+                            `https://api.mapbox.com/geocoding/v5/mapbox.places/${sensor?.longitude},${sensor?.latitude}.json?types=address&language=ru&access_token=${env.NEXT_PUBLIC_MAPBOX_TOKEN}`
+                        );
 
-        return sensorsWithLocations;
-    }),
+                        if (response.status !== 200) {
+                            return { ...sensor, location: 'Undefined location' };
+                        }
+
+                        const data = response.data;
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                        const location = data.features[0].place_name_ru;
+
+                        return { ...sensor, location };
+                    } catch (error) {
+                        console.error('Error fetching location for sensor:', error);
+                        return { ...sensor, location: 'Error fetching location' };
+                    }
+                })
+            );
+
+            return sensorsWithLocations;
+        }),
     updateSensor: publicProcedure
         .input(
             z.object({
@@ -92,6 +164,7 @@ export const sensorRouter = createTRPCRouter({
                 serialNumber: z.string(),
                 latitude: z.number(),
                 longitude: z.number(),
+                isOnline: z.boolean().default(true),
                 // ownerId: z.string(),
             })
         )
@@ -108,6 +181,7 @@ export const sensorRouter = createTRPCRouter({
                     serialNumber: input.serialNumber,
                     latitude: input.latitude,
                     longitude: input.longitude,
+                    isOnline: input.isOnline,
                     //ownerId: input.ownerId,
                 },
             });
@@ -115,6 +189,7 @@ export const sensorRouter = createTRPCRouter({
         }),
     getAll: publicProcedure.query(async ({ ctx }) => {
         const sensors = await ctx.db.sensor.findMany();
+
         const sensorsWithLocations = await Promise.all(
             sensors.map(async sensor => {
                 try {
@@ -127,6 +202,7 @@ export const sensorRouter = createTRPCRouter({
                     }
 
                     const data = response.data;
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                     const location = data.features[0].place_name_ru;
 
                     return { ...sensor, location };
@@ -144,25 +220,36 @@ export const sensorRouter = createTRPCRouter({
             z.object({
                 limit: z.number().min(1).max(100).nullish(),
                 cursor: z.string().nullish(),
+                paramsFilter: z.record(paramsValueSchema, z.boolean()),
+                displayFilter: displayValueSchema,
             })
         )
         .query(async opts => {
             const { input } = opts;
             const limit = input.limit ?? 50;
             const { cursor } = input;
+            const paramsModel = filterByParams(input.paramsFilter as Record<ParametrsType, boolean>);
             const sensors = await opts.ctx.db.sensor.findMany({
+                include: {
+                    values: true,
+                },
                 take: limit + 1,
                 cursor: cursor ? { id: cursor } : undefined,
                 orderBy: {
                     id: 'asc',
                 },
+                where: {
+                    AND: [paramsModel.condition, getDisplayCondition(input.displayFilter, paramsModel.selectedParams)],
+                },
             });
+
             let nextCursor: typeof cursor | undefined = undefined;
+
             const sensorsWithLocations = await Promise.all(
                 sensors.map(async sensor => {
                     try {
                         const response = await opts.ctx.http.get(
-                            `https://api.mapbox.com/geocoding/v5/mapbox.places/${sensor.longitude},${sensor.latitude}.json?types=address&language=ru&access_token=${env.NEXT_PUBLIC_MAPBOX_TOKEN}`
+                            `https://api.mapbox.com/geocoding/v5/mapbox.places/${sensor?.longitude},${sensor?.latitude}.json?types=address&language=ru&access_token=${env.NEXT_PUBLIC_MAPBOX_TOKEN}`
                         );
 
                         if (response.status !== 200) {
@@ -170,6 +257,7 @@ export const sensorRouter = createTRPCRouter({
                         }
 
                         const data = await response.data;
+                        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                         const location: string = await data.features[0].place_name_ru;
 
                         return { ...sensor, location };

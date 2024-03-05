@@ -1,4 +1,8 @@
 'use client';
+
+import { useAtomValue } from 'jotai';
+import type mapboxgl from 'mapbox-gl';
+import { filterStateAtom } from '~/entities/FilterMenu';
 import { type BBox } from 'geojson';
 import { useEffect, useState, useRef, useMemo } from 'react';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -36,14 +40,19 @@ export const MapComponent = () => {
 
     const mapRef = useRef<MapRef>(null);
 
+    const filterState = useAtomValue(filterStateAtom);
+
     const [viewState, setViewState] = useState<ViewState>(initialViewState);
 
-    const { data: sensors = [], isFetching } = api.sensor.getByLocation.useQuery(bounds, {
+    const params = filterState.params;
+    const display = filterState.display;
+
+    const { data: sensors = [], isFetching } = api.sensor.getByLocation.useQuery({location: bounds, paramsFilter: params, displayFilter: display}, {
         queryKey: ['sensor.getByLocation', bounds],
         trpc: { abortOnUnmount: true },
         keepPreviousData: true,
     });
-
+  
     const points = useMemo(() => {
         return sensors.map(sensor => ({
             type: 'Feature',

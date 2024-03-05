@@ -57,6 +57,7 @@ model User {
   posts         Post[]
   sessions      Session[]
   // sensors       Sensor[]
+
 }
 
 model VerificationToken {
@@ -85,6 +86,7 @@ model Sensor {
   serialNumber    String
   latitude        Float
   longitude       Float
+  isOnline        Boolean
   values          SensorData[]
 }
 
