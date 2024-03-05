@@ -11,6 +11,8 @@ import { type ClusterProperties, type PointFeature } from 'supercluster';
 import useSupercluster from 'use-supercluster';
 import { Loader } from '~/entities/Loader';
 import MarkerIcon from '~/shared/assets/icons/marker.svg';
+import IconMinus from '~/shared/assets/icons/minus.svg';
+import IconPlus from '~/shared/assets/icons/plus.svg';
 import { env } from '~/shared/lib';
 import { api } from '~/trpc/react';
 import { type RouterOutputs } from '~/trpc/shared';
@@ -79,10 +81,17 @@ export const MapComponent = () => {
         options: { radius: 60, maxZoom: 12 },
     });
 
-    useEffect(() => {
-        console.log(clusters);
-    }, [clusters]);
+    const handleZoomIn = () => {
+        const newZoom = Math.min(viewState.zoom + 1, 20);
+        mapRef.current?.setZoom(newZoom);
+        setBounds(mapRef.current?.getBounds().toArray().flat() as BBox);
+    };
 
+    const handleZoomOut = () => {
+        const newZoom = Math.max(viewState.zoom - 1, 0);
+        mapRef.current?.setZoom(newZoom);
+        setBounds(mapRef.current?.getBounds().toArray().flat() as BBox);
+    };
     return (
         <div className={'flex h-screen w-full bg-white'}>
             <Map
@@ -96,6 +105,20 @@ export const MapComponent = () => {
                 mapStyle={'mapbox://styles/mapbox/streets-v11'}
                 style={{ width: '100%', height: '100vh', display: 'flex' }}
             >
+                <div className='absolute right-6 top-1/2 mb-10 mr-2.5 flex -translate-y-1/2 transform flex-col gap-6'>
+                    <button
+                        onClick={handleZoomIn}
+                        className='flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md'
+                    >
+                        <IconPlus style={{ width: '31px', height: '31px' }} />
+                    </button>
+                    <button
+                        onClick={handleZoomOut}
+                        className='flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md'
+                    >
+                        <IconMinus style={{ width: '31px', height: '31px' }} />
+                    </button>
+                </div>
                 {isFetching && <Loader />}
                 {clusters.map(cluster => {
                     const [longitude, latitude] = cluster.geometry.coordinates;
