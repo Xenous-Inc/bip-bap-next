@@ -1,3 +1,4 @@
+import { UserType } from '@prisma/client';
 import { initTRPC, TRPCError } from '@trpc/server';
 import superjson from 'superjson';
 import { ZodError } from 'zod';
@@ -46,3 +47,20 @@ const enforceUserIsAuthed = t.middleware(({ ctx, next }) => {
 });
 
 export const protectedProcedure = t.procedure.use(enforceUserIsAuthed);
+const enforceUserIsAdmin = t.middleware(({ ctx, next }) => {
+    if (!ctx.session || !ctx.session.user) {
+        throw new TRPCError({ code: 'UNAUTHORIZED' });
+    }
+
+    if (ctx.session.user.type !== UserType.ADMIN) {
+        throw new TRPCError({ code: 'FORBIDDEN' });
+    }
+
+    return next({
+        ctx: {
+            session: { ...ctx.session, user: ctx.session.user },
+        },
+    });
+});
+
+export const adminProcedure = t.procedure.use(enforceUserIsAdmin);
