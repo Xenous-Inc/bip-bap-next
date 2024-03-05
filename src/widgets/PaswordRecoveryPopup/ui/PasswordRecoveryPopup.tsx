@@ -4,8 +4,11 @@ import { Popup, type PopupProps } from '~/entities/Popup';
 import IconLock from '~/shared/assets/icons/icon-lock.svg';
 import { PhoneInput } from '~/shared/ui';
 
-export type PasswordRecoveryPopupProps = Omit<PopupProps, 'title'>;
+interface PasswordRecoveryPopupProps extends Omit<PopupProps, 'title'> {
+    hadleSignIn: (value: boolean) => void;
+}
 export const PasswordRecoveryPopup: React.FC<PasswordRecoveryPopupProps> = props => {
+    const { hadleSignIn } = props;
     const { control, handleSubmit } = useForm({
         defaultValues: {
             phone: '',
@@ -35,9 +38,9 @@ export const PasswordRecoveryPopup: React.FC<PasswordRecoveryPopupProps> = props
                             <p className='text-sm'>Востановить пароль</p>
                         </button>
                     </div>
-                    <button type='submit' className={'text-btn-blue '}>
+                    <a type='submit' className={'text-btn-blue '} onClick={() => hadleSignIn(true)}>
                         Уже есть аккаунт?
-                    </button>
+                    </a>
                 </div>
             </form>
         </Popup>

@@ -13,7 +13,13 @@ import { phoneNumberValidationPattern } from '~/shared/ui/Input/phone/PhoneInput
 import { PasswordRecoveryPopup } from '~/widgets/PaswordRecoveryPopup';
 import { RegisterPopup } from '~/widgets/RegisterPopup/ui/RegisterPopup';
 
-export const AuthPopup: React.FC<Omit<PopupProps, 'title'>> = props => {
+interface AuthProps extends Omit<PopupProps, 'title'> {
+    hadleRecovery: (value: boolean) => void;
+    hadleRegister: (value: boolean) => void;
+}
+
+export const AuthPopup: React.FC<AuthProps> = props => {
+    const { hadleRecovery, hadleRegister } = props;
     const { control, handleSubmit } = useForm({
         defaultValues: {
             login: '',
@@ -22,9 +28,6 @@ export const AuthPopup: React.FC<Omit<PopupProps, 'title'>> = props => {
     });
 
     const [isRememberMe, setIsRememberMe] = useState(false);
-
-    const [PasswordRecoveryPopupOpen, setPasswordRecoveryPopupOpen] = useState(false);
-    const [RegisterPopupOpen, setRegisterPopup] = useState(false);
 
     const onSubmit = (data: any) => {
         alert(JSON.stringify(data));
@@ -101,21 +104,13 @@ export const AuthPopup: React.FC<Omit<PopupProps, 'title'>> = props => {
                     <div className={cn('flex w-full flex-row justify-between text-sm')}>
                         <p>
                             Впервые у нас?
-                            <a onClick={() => setRegisterPopup(true)} className={'text-btn-blue'}>
+                            <a onClick={() => hadleRegister(true)} className={'text-btn-blue'}>
                                 Регистрация
                             </a>
                         </p>
-                        <a onClick={() => setPasswordRecoveryPopupOpen(true)} className={'text-btn-blue'}>
+                        <a onClick={() => hadleRecovery(true)} className={'text-btn-blue'}>
                             Забыли пароль?
                         </a>
-                        {PasswordRecoveryPopupOpen && (
-                            <PasswordRecoveryPopup
-                                isOpen={PasswordRecoveryPopupOpen}
-                                setIsOpen={setPasswordRecoveryPopupOpen}
-                            />
-                        )}
-
-                        {RegisterPopupOpen && <RegisterPopup isOpen={RegisterPopupOpen} setIsOpen={setRegisterPopup} />}
                     </div>
                 </div>
             </form>

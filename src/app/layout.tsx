@@ -1,4 +1,5 @@
 import { Inter } from 'next/font/google';
+import { Header } from '~/widgets/Header';
 import { Providers } from './_providers/Providers';
 import '~/styles/globals.scss';
 
@@ -17,6 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     return (
         <html>
             <body className={`font-sans ${inter.variable}`}>
+                <Header />
                 <Providers>{children}</Providers>
             </body>
         </html>
