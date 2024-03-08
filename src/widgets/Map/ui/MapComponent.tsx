@@ -1,14 +1,16 @@
 'use client';
 import cn from 'classnames';
-import { filterStateAtom } from '~/entities/FilterMenu';
 import { type BBox } from 'geojson';
 import { useAtomValue } from 'jotai';
 import { useEffect, useState, useRef, useMemo } from 'react';
+import type Supercluster from 'supercluster';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import Map, { type MapRef, Marker, type ViewState } from 'react-map-gl';
 import { type ClusterProperties, type PointFeature } from 'supercluster';
 import useSupercluster from 'use-supercluster';
+import { filterStateAtom } from '~/entities/FilterMenu';
 import { Loader } from '~/entities/Loader';
+import { Colors, ValueLimit } from '~/entities/MarkerColor';
 import MarkerIcon from '~/shared/assets/icons/marker.svg';
 import IconMinus from '~/shared/assets/icons/minus.svg';
 import IconPlus from '~/shared/assets/icons/plus.svg';
@@ -33,6 +35,38 @@ const initialViewState: ViewState = {
 type SensorOutputType = RouterOutputs['sensor']['getByLocation'];
 
 type SensorProps = { sensorId: string } & Omit<SensorOutputType[number], 'latitude' | 'longitude' | 'id'>;
+
+type SensorPoint = PointFeature<ClusterProperties & SensorProps>;
+
+const getClusterColor = (
+    sensors: SensorPoint[] | Array<Supercluster.ClusterFeature<Supercluster.AnyProps>> | undefined
+) => {
+    if (!sensors) {
+        return Colors.NORMAL;
+    }
+    const average =
+        sensors.reduce((acc, curr) => {
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+            const statusAverage = curr.properties?.status?.average;
+            const averageToAdd = statusAverage ?? 1;
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-return
+            return acc + averageToAdd;
+        }, 0) / sensors.length;
+
+    if (!average) {
+        return Colors.NORMAL;
+    }
+    if (average <= ValueLimit.PERFECT) {
+        return Colors.PERFECT;
+    }
+    if (average <= ValueLimit.NORMAL) {
+        return Colors.NORMAL;
+    }
+    if (average > ValueLimit.DANGER) {
+        return Colors.DANGER;
+    }
+    return Colors.NORMAL;
+};
 
 export const MapComponent = () => {
     const [bounds, setBounds] = useState<BBox>([
@@ -76,7 +110,7 @@ export const MapComponent = () => {
                 type: 'Point',
                 coordinates: [sensor.longitude, sensor.latitude],
             },
-        })) as Array<PointFeature<ClusterProperties & SensorProps>>;
+        })) as SensorPoint[];
     }, [sensors]);
 
     useEffect(() => {
@@ -141,6 +175,9 @@ export const MapComponent = () => {
                     }
 
                     if (isCluster) {
+                        const includedPoints = supercluster?.getChildren(cluster.properties.cluster_id);
+                        const clusterColor = getClusterColor(includedPoints);
+
                         return (
                             <Marker
                                 key={`cluster-${cluster.properties.cluster_id}`}
@@ -161,6 +198,7 @@ export const MapComponent = () => {
                                     style={{
                                         width: `${10 + (pointCount / points.length) * 50}px`,
                                         height: `${10 + (pointCount / points.length) * 50}px`,
+                                        backgroundColor: clusterColor,
                                     }}
                                 >
                                     {pointCount}
