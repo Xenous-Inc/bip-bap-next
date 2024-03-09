@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         /* Base Options: */
+        "noErrorTruncation":true,
         "esModuleInterop": true,
         "skipLibCheck": true,
         "target": "ES2017",

@@ -1,5 +1,6 @@
 import { type Config } from 'tailwindcss';
 import { fontFamily } from 'tailwindcss/defaultTheme';
+import { Colors } from '~/entities/MarkerColor';
 
 export default {
     content: ['./src/**/*.{js,ts,jsx,tsx}'],
@@ -17,6 +18,9 @@ export default {
                 'header-blue': '#3D5AFE',
                 'btn-green': '#2ECC71',
                 'page-bg': '#F5F5F7',
+                'status-perfect': '#2ECC71',
+                'status-normal': '#FDD835',
+                'status-danger': '#F44336',
             },
             boxShadow: {
                 '3xl': '0px 0px 25px 0px #00000033',

@@ -7,6 +7,7 @@ import {
     displayValueSchema,
     paramsValueSchema,
 } from '~/entities/FilterMenu';
+import { Colors, ValueLimit } from '~/entities/MarkerColor';
 import { env } from '~/shared/lib';
 import { createTRPCRouter, publicProcedure } from '../trpc';
 
@@ -15,6 +16,27 @@ const Limits = {
     [ParametrsValue.PM10]: 155,
     [ParametrsValue.Ozon]: 0.2,
 } as const;
+
+type Values = {
+    id: string;
+    type: ParametrsType;
+    value: number;
+    isDeleted: boolean;
+    sensorId: string;
+};
+
+const getColor = (values: Values[]) => {
+    const average = values.reduce((acc, curr) => acc + curr.value, 0) / values.length;
+    if (average <= ValueLimit.PERFECT) {
+        return { color: Colors.PERFECT, average };
+    }
+    if (average <= ValueLimit.NORMAL) {
+        return { color: Colors.NORMAL, average };
+    }
+    if (average > ValueLimit.DANGER) {
+        return { color: Colors.DANGER, average };
+    }
+};
 
 const filterByParams = (paramsFilter: Record<ParametrsType, boolean>) => {
     return {
@@ -125,28 +147,30 @@ export const sensorRouter = createTRPCRouter({
                         gte: input.location[0],
                         lte: input.location[2],
                     },
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                     AND: [paramsModel.condition, getDisplayCondition(input.displayFilter, paramsModel.selectedParams)],
                 },
             });
             const sensorsWithLocations = await Promise.all(
                 sensors.map(async sensor => {
+                    const status = getColor(sensor.values);
                     try {
                         const response = await ctx.http.get(
                             `https://api.mapbox.com/geocoding/v5/mapbox.places/${sensor?.longitude},${sensor?.latitude}.json?types=address&language=ru&access_token=${env.NEXT_PUBLIC_MAPBOX_TOKEN}`
                         );
 
                         if (response.status !== 200) {
-                            return { ...sensor, location: 'Undefined location' };
+                            return { ...sensor, location: 'Undefined location', status: status };
                         }
 
                         const data = response.data;
                         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                         const location = data.features[0].place_name_ru;
 
-                        return { ...sensor, location };
+                        return { ...sensor, location, status: status };
                     } catch (error) {
                         console.error('Error fetching location for sensor:', error);
-                        return { ...sensor, location: 'Error fetching location' };
+                        return { ...sensor, location: 'Error fetching location', status: status };
                     }
                 })
             );
@@ -239,6 +263,7 @@ export const sensorRouter = createTRPCRouter({
                     id: 'asc',
                 },
                 where: {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
                     AND: [paramsModel.condition, getDisplayCondition(input.displayFilter, paramsModel.selectedParams)],
                 },
             });
