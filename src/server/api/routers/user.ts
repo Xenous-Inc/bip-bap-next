@@ -11,15 +11,7 @@ export const userRouter = createTRPCRouter({
         });
     }),
     updatePassword: protectedProcedure.input(updateUserPasswordSchema).mutation(async ({ ctx, input }) => {
-        if (!input.oldPassword) {
-            throw new Error('Старого пароля нет');
-        }
-        if (!input.newPassword) {
-            throw new Error('Нового пароля нет');
-        }
-
         const hashedNewPassword = await bcrypt.hash(input.newPassword, 10);
-
         //TODO: add phone filter after add provider for phone
         const user = await ctx.db.user.findUnique({
             where: { email: input.email },
@@ -31,7 +23,7 @@ export const userRouter = createTRPCRouter({
             throw new Error('Вы не имеете доступа к изменению пароля');
         }
         if (!user.password) {
-            throw new Error('Пароля нет :(');
+            throw new Error('Пароля нет');
         }
         const isPasswordMatch = await bcrypt.compare(input.oldPassword, user.password);
         if (!isPasswordMatch) {
