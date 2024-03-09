@@ -2,9 +2,11 @@
 import cn from 'classnames';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
+import { type UpdateUserPasswordSchema } from '~/shared/api/schema/updateUserPassword';
 import IconSave from '~/shared/assets/icons/save.svg';
 import IconUser from '~/shared/assets/icons/user.svg';
 import { EmailInput, PasswordInput, PhoneInput } from '~/shared/ui';
+import { api } from '~/trpc/react';
 
 export const PersonalPage: React.FC = () => {
     const {
@@ -18,21 +20,24 @@ export const PersonalPage: React.FC = () => {
         mode: 'onTouched',
         defaultValues: {
             email: '',
-            phone: '',
-            password: '',
-            confirmation: '',
+            phoneNumber: '',
+            oldPassword: '',
+            newPassword: '',
         },
     });
 
-    const onSubmit = (data: any) => {
-        alert(JSON.stringify(data));
+    const mutation = api.user.updatePassword.useMutation();
+
+    const onSubmit = async (data: any) => {
+        const input = data as UpdateUserPasswordSchema;
+        mutation.mutate(input);
     };
 
-    const watchPasswords = watch(['password', 'confirmation']);
+    const watchPasswords = watch(['oldPassword', 'newPassword']);
 
     useEffect(() => {
-        if (watchPasswords[0] === watchPasswords[1] && getFieldState('confirmation').isDirty) {
-            setError('confirmation', { type: 'custom', message: 'Пароли совпадают' });
+        if (watchPasswords[0] === watchPasswords[1] && getFieldState('newPassword').isDirty) {
+            setError('newPassword', { type: 'custom', message: 'Пароли совпадают' });
         }
     }, [watchPasswords]);
 
@@ -48,20 +53,25 @@ export const PersonalPage: React.FC = () => {
                     {/* @ts-ignore */}
                     <EmailInput name={'email'} control={control} rules={{ required: true }} />
                     {/* @ts-ignore */}
-                    <PhoneInput name={'phone'} placeholder='Телефон' control={control} rules={{ required: true }} />
+                    <PhoneInput
+                        name={'phoneNumber'}
+                        placeholder='Телефон'
+                        control={control}
+                        rules={{ required: true }}
+                    />
                     <PasswordInput
-                        name={'password'}
+                        name={'oldPassword'}
                         placeholder='Старый пароль'
                         /* @ts-ignore */
                         control={control}
                         rules={{ required: true }}
                     />
                     <PasswordInput
-                        name={'confirmation'}
+                        name={'newPassword'}
                         placeholder={'Новый пароль'}
                         /* @ts-ignore */
                         control={control}
-                        error={errors?.confirmation?.message}
+                        error={errors?.newPassword?.message}
                         rules={{ required: true }}
                     />
                     <div className={cn('flex w-full  flex-row items-center justify-center')}>

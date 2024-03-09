@@ -1,7 +1,8 @@
 'use client';
-import cn from 'classnames';
+import { filterStateAtom } from '~/entities/FilterMenu';
 import { type BBox } from 'geojson';
 import { useAtomValue } from 'jotai';
+import type mapboxgl from 'mapbox-gl';
 import { useEffect, useState, useRef, useMemo } from 'react';
 import type Supercluster from 'supercluster';
 import 'mapbox-gl/dist/mapbox-gl.css';
@@ -113,20 +114,13 @@ export const MapComponent = () => {
         })) as SensorPoint[];
     }, [sensors]);
 
-    useEffect(() => {
-        console.log('POINTS', points);
-    }, [points]);
-
     const { clusters, supercluster } = useSupercluster({
         bounds,
         points,
         zoom: viewState.zoom,
         options: { radius: 60, maxZoom: 12 },
     });
-    useEffect(() => {
-        console.log('CLUSTERS', clusters);
-    }, [clusters]);
-
+  
     const handleZoomIn = () => {
         const newZoom = Math.min(viewState.zoom + 1, 20);
         mapRef.current?.setZoom(newZoom);
@@ -151,16 +145,16 @@ export const MapComponent = () => {
                 mapStyle={'mapbox://styles/mapbox/streets-v11'}
                 style={{ width: '100%', height: '100vh', display: 'flex' }}
             >
-                <div className='absolute right-6 top-1/2 mb-10 mr-2.5 flex -translate-y-1/2 transform flex-col gap-6'>
+                <div className={'absolute right-6 top-1/2 mb-10 mr-2.5 flex -translate-y-1/2 transform flex-col gap-6'}>
                     <button
                         onClick={handleZoomIn}
-                        className='flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md'
+                        className={'flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md'}
                     >
                         <IconPlus style={{ width: '31px', height: '31px' }} />
                     </button>
                     <button
                         onClick={handleZoomOut}
-                        className='flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md'
+                        className={'flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-md'}
                     >
                         <IconMinus style={{ width: '31px', height: '31px' }} />
                     </button>
@@ -175,6 +169,7 @@ export const MapComponent = () => {
                     }
 
                     if (isCluster) {
+                      
                         const includedPoints = supercluster?.getChildren(cluster.properties.cluster_id);
                         const clusterColor = getClusterColor(includedPoints);
 
@@ -184,7 +179,6 @@ export const MapComponent = () => {
                                 latitude={latitude}
                                 longitude={longitude}
                                 onClick={() => {
-                                    console.log(cluster.properties);
 
                                     const expansionZoom = Math.min(
                                         supercluster?.getClusterExpansionZoom(cluster.properties.cluster_id) ?? 20,
@@ -208,7 +202,6 @@ export const MapComponent = () => {
                     }
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
                     const color = cluster.properties.status.color as string;
-                    console.log(color);
                     return (
                         <Marker
                             key={`point-${cluster.properties.sensorId}`}

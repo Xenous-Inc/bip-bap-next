@@ -1,16 +1,19 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 import IconBell from '~/shared/assets/icons/icon_bell.svg';
 import IconBookmark from '~/shared/assets/icons/icon_bookmark.svg';
 import IconList from '~/shared/assets/icons/icon_list.svg';
 import IconMap from '~/shared/assets/icons/icon_map.svg';
 import IconRating from '~/shared/assets/icons/icon_rating.svg';
+import IconUser from '~/shared/assets/icons/icon_user.svg';
+import { AuthFlow } from '~/widgets/AuthFlow/indext';
 import { NavLink } from './NavLink';
 
 export const Header: React.FC = () => {
     // const session = useSession();
-
+    const [isAuthFlow, setIsAuthFlow] = useState(false);
     return (
         <header
             className={
@@ -52,6 +55,15 @@ export const Header: React.FC = () => {
                     {todo: add popups here }
                 </>
             )} */}
+            <button
+                onClick={() => {
+                    setIsAuthFlow(prev => !prev);
+                    console.log(isAuthFlow);
+                }}
+            >
+                <IconUser className={'h-6 w-6'} />
+            </button>
+            <AuthFlow isOpen={isAuthFlow} setIsOpen={setIsAuthFlow} />
         </header>
     );
 };

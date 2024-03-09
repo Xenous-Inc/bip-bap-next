@@ -7,9 +7,12 @@ import FacebookLogo from '~/shared/assets/icons/logo-facebook.svg';
 import GoogleLogo from '~/shared/assets/icons/logo-google.svg';
 import { EmailInput, PasswordInput, PhoneInput } from '~/shared/ui';
 
-export type RegisterPopupProps = Omit<PopupProps, 'title'>;
+interface RegisterPopupProps extends Omit<PopupProps, 'title'> {
+    hadleSignIn: (value: boolean) => void;
+}
 
 export const RegisterPopup: React.FC<RegisterPopupProps> = props => {
+    const { hadleSignIn } = props;
     const {
         control,
         handleSubmit,
@@ -114,9 +117,9 @@ export const RegisterPopup: React.FC<RegisterPopupProps> = props => {
                             Регистрация
                         </button>
                     </div>
-                    <button type='button' className={'text-btn-blue '}>
+                    <a type='button' className={'text-btn-blue '} onClick={() => hadleSignIn(true)}>
                         Уже есть аккаунт?
-                    </button>
+                    </a>
                 </div>
             </form>
         </Popup>
